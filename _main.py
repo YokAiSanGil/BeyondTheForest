@@ -1,10 +1,9 @@
 """
 Script principal utilisant l'interface Dragon Quest avec architecture modulaire.
 """
-from music import *
+from utils.music import *
 from interfaces.phase_menu import PhaseMenu
 from interfaces.phase_combat import PhaseCombat
-from interfaces.phase_soin import PhaseSoin
 from interfaces.phase_exploration import PhaseExploration
 from affichage.widgets import afficher_stats_finales
 from utils.outils import clear_screen, ecrire_lentement, pause, suivant
@@ -17,7 +16,6 @@ def main():
     # Initialisation des interfaces
     phase_menu = PhaseMenu()
     phase_combat = PhaseCombat()
-    phase_soin = PhaseSoin()
     phase_exploration = PhaseExploration()
     
     # Variables de jeu
@@ -52,25 +50,29 @@ def main():
                     # Un monstre a été rencontré
                     monstre = phase_exploration.get_monstre_rencontre()
                     
-                    # Phase de combat
-                    resultat_combat = phase_combat.afficher(hero, monstre)
-                    
-                    if resultat_combat == "victoire":
-                        monstres_vaincus += 1
-                        # Soin automatique après victoire
-                        phase_soin.afficher(hero)
+                    if monstre is not None:
+                        # Phase de combat
+                        resultat_combat = phase_combat.afficher(hero, monstre)
                         
-                    elif resultat_combat == "defaite":
-                        break
-                        
-                    elif resultat_combat == "fuite":
-                        # Soin automatique après fuite
-                        phase_soin.afficher(hero)
-                        
-                    elif resultat_combat == "abandon":
-                        ecrire_lentement("Vous quittez votre forme physique...")
-                        suivant()
-                        break
+                        if resultat_combat == "victoire":
+                            monstres_vaincus += 1
+                            # Soin automatique après victoire
+                            phase_soin.afficher(hero)
+                            
+                        elif resultat_combat == "defaite":
+                            break
+                            
+                        elif resultat_combat == "fuite":
+                            # Soin automatique après fuite
+                            phase_soin.afficher(hero)
+                            
+                        elif resultat_combat == "abandon":
+                            ecrire_lentement("Vous quittez votre forme physique...")
+                            suivant()
+                            break
+                    else:
+                        ecrire_lentement("Erreur : aucun monstre trouvé pour le combat.")
+                        continue
                         
                 elif resultat_exploration == "soin":
                     # Phase de soin demandée

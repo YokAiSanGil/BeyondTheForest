@@ -29,28 +29,33 @@ class PhaseCombat(BaseInterface):
 
     def initialiser_combat(self, hero: Hero, monstre: Monster):
         """
-        Initialise un nouveau combat avec un héros et un monstre.
+        Initialise le combat entre le héros et le monstre avec affichage spectaculaire.
         """
         self.hero = hero
         self.monstre = monstre
         
-        # Créer une instance de menu réutilisable pour le combat
-        self.menu_combat = MenuAnime(
-            instructions="↑↓ Sélectionner, Entrée pour confirmer",
-            afficher_titre_jeu=False,
-            conserver_ecran=True,  # Important pour ne pas effacer le header
-            style_fenetre=False
-        )
-        
         # Démarrer la musique
         battle_music()
         self.nettoyer_ecran()
-        self.ecrire_message(f"Un {monstre.race} sauvage apparaît !")
+        
+        # Créer l'interface complète de combat
+        interface_combat = self.creer_interface_combat_complete()
+        
+        # Afficher l'interface ligne par ligne avec effet
+        self.afficher_interface_ligne_par_ligne(interface_combat)
+        
+        # Message simple après l'affichage
+        print(f"\nUn {monstre.race} apparaît, préparez-vous !")
+        
+        # Attendre un moment pour l'effet dramatique
+        import time
+        time.sleep(2)
+        
         self.attendre_utilisateur()
-    
-    def afficher_interface_combat(self):
+
+    def creer_interface_combat_complete(self):
         """
-        Affiche l'interface principale du combat avec les ASCII arts et les barres de vie.
+        Crée l'interface complète de combat (héros + monstre + barres de vie).
         """
         if not self.hero or not self.monstre:
             raise ValueError("Combat non initialisé correctement")
@@ -72,11 +77,32 @@ class PhaseCombat(BaseInterface):
         bloc_monstre = f"{info_monstre}\n{art_monstre}"
         
         combat_info = combiner_blocs_ascii(bloc_hero, bloc_monstre, espacement=15)
+        ligne_separation = "=" * 80
         
-        # Affichage manuel de l'état du combat
+        return f"{combat_info}\n{ligne_separation}"
+
+    def afficher_interface_ligne_par_ligne(self, interface_complete):
+        """
+        Affiche l'interface complète de combat ligne par ligne pour un effet dramatique.
+        """
+        import time
+        
+        lignes_interface = interface_complete.split('\n')
+        for ligne in lignes_interface:
+            print(ligne)
+            # Petit délai pour l'effet ligne par ligne
+            time.sleep(0.1)  # Plus rapide pour l'interface complète
+
+    def afficher_interface_combat(self):
+        """
+        Affiche l'interface principale du combat (version normale, sans effet).
+        """
+        if not self.hero or not self.monstre:
+            raise ValueError("Combat non initialisé correctement")
+            
         self.nettoyer_ecran()
-        print(combat_info)
-        print("=" * 80)
+        interface_combat = self.creer_interface_combat_complete()
+        print(interface_combat)
     
     def afficher_menu_actions(self):
         """

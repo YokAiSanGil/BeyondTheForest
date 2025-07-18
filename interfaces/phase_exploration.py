@@ -24,90 +24,153 @@ class PhaseExploration(BaseInterface):
         self.hero = None
         self.monstre_rencontre = None
     
-    def afficher_interface_exploration(self, hero):
-        """
-        Affiche l'interface d'exploration principale.
-        """
-        self.hero = hero
-        self.nettoyer_ecran()
-        hero_ascii = NAIN if hero.race == "Nain" else HUMAIN
-        print(hero_ascii)
-        barre_vie = creer_barre_de_vie(hero.points_de_vie, hero.points_de_vie_max)
-        print(f"\n{hero.nom} le {hero.race}")
-        print(f"PV: {barre_vie}")
-        print(f"Or: {hero.gold} | Cuir: {hero.cuir}")
-        print("\n" + "=" * 50 + "\n")
-    
+
+
     def explorer(self):
         """
         Lance l'exploration et détermine le type d'événement.
         """
-        self.ecrire_message(f"{self.hero.nom} explore les alentours...")
-        self.attendre_utilisateur()
-        self.nettoyer_ecran()
-        
+        if not self.hero:
+            return "menu"
+            
         # Lancer un dé pour déterminer l'événement
         resultat_exploration = De.lancer()
         
-        if resultat_exploration <= 2:
-            return self.rien_trouve()
-        elif resultat_exploration <= 4:
+        if resultat_exploration == 1:
             return self.rencontrer_monstre()
-        else:
+        elif resultat_exploration == 2:
             return self.trouver_tresor()
+        else:
+            # Plus de chances d'avoir des messages d'exploration (4-6 sur 6)
+            self.afficher_message_exploration()
+            return "exploration"  # Continue l'exploration
+
+    def afficher_message_exploration(self):
+        """
+        Affiche un message d'exploration sans attendre l'utilisateur.
+        """
+        # ✨ PAS D'INTERFACE, JUSTE LE MESSAGE SANS ATTENTE
+        self.nettoyer_ecran()
+        
+        # Afficher le message d'exploration
+        self.message_exploration_aleatoire()
+        
+        # ✨ PLUS D'ATTENTE ! Retour direct au menu
+
+    def message_exploration_aleatoire(self):
+        """
+        Affiche un message d'exploration aléatoire.
+        """
+        messages = [
+            "Vous avancez prudemment dans la forêt...",
+            "Les arbres murmurent des secrets anciens...",
+            "Vos pas résonnent sur le sol moussu...",
+            "Une brise mystérieuse caresse votre visage...",
+            "Vous sentez une présence dans l'ombre...",
+            "La forêt semble vivante, chaque bruit attire votre attention...",
+            "Vous entendez le chant des oiseaux au loin...",
+            "Un léger brouillard enveloppe les arbres...",
+            "Vous marchez sur un tapis de feuilles mortes...",
+            "Un craquement dans les buissons vous fait sursauter...",
+            "Vous avez l'impression d'être observé...",
+            "Un sanglier passe à proximité.",
+            "Vous continuez à avancer, le cœur battant...",
+            "Un sanglier passe à proximité, vous avez le ventre qui gargouille...",
+            "Des chants portés par le vent traversent la forêt obscure.",
+            "Vous avez l'impression d'être déjà passé par ici...",
+            "Un bruit étrange attire votre attention...",
+            "Vous entendez le murmure d'une rivière au loin...",
+            "L'odeur de la terre humide remplit vos narines...",
+            "Vous entendez le bruit de vos propres pas sur les feuilles mortes...",
+            "Une toile d'araignée scintille de rosée dans un rayon de soleil...",
+            "Un papillon coloré volette devant vous avant de disparaître...",
+            "Vous remarquez des traces de pas dans la terre meuble...",
+            "Le vent fait danser les feuilles au-dessus de votre tête...",
+            "Une branche craque quelque part derrière vous...",
+            "L'écho de vos pas se perd dans l'immensité de la forêt..."
+        ]
+        
+        # Ajouter des messages personnalisés avec le nom du héros si disponible
+        if self.hero:
+            messages.extend([
+                f"{self.hero.nom} scrute les alentours avec attention...",
+                f"{self.hero.nom} ressent une étrange énergie dans l'air...",
+                f"{self.hero.nom} remarque de curieuses empreintes dans la boue...",
+                f"{self.hero.nom} s'arrête un instant pour écouter...",
+                f"{self.hero.nom} contourne prudemment un buisson épineux..."
+            ])
+        
+        message = random.choice(messages)
+        print(f"\n🌲 {message}")
+        
+        # Parfois, ajouter une seconde chance de trouver quelque chose
+        chance_seconde = De.lancer()
+        if chance_seconde == 6:  # 1 chance sur 6
+            self.petit_bonus()
     
-    def rien_trouve(self):
+    def petit_bonus(self):
         """
-        Le héros ne trouve rien d'intéressant.
+        Petit bonus occasionnel lors de l'exploration.
         """
-        messages_vides = [
-            f"{self.hero.nom} ne trouve rien d'intéressant...",
-            f"{self.hero.nom} entend des bruits étranges au loin...",
-            f"Le chemin semble calme... trop calme.",
-            f"{self.hero.nom} continue son exploration méthodique.",
-            f"Rien à signaler dans cette zone."
-        ]
-        
-        message = random.choice(messages_vides)
-        self.ecrire_message(message)
-        self.attendre_utilisateur()
-        
-        # Proposer de continuer ou se reposer
+        if not self.hero:
+            return
+            
+        bonus = De.lancer()
+        if bonus <= 3:
+            # Petit bonus d'or
+            or_bonus = De.lancer()
+            self.hero.gold += or_bonus
+            print(f"✨ Bonus ! +{or_bonus} or trouvé en fouillant.")
+        else:
+            # Message d'ambiance sans récompense
+            messages_bonus = [
+                "Vous trouvez un champignon coloré, mais vous préférez ne pas y toucher.",
+                "Une luciole brille un instant puis disparaît.",
+                "Vous entendez un hibou au loin."
+            ]
+            import random
+            print(f"{random.choice(messages_bonus)}")
+
+    def proposer_action(self):
+        """
+        Propose les actions d'exploration au joueur avec un menu horizontal simple.
+        """
+        # Options du menu
         options = [
-            ("CONTINUER L'EXPLORATION", "continuer"),
-            ("SE REPOSER", "repos")
+            ("EXPLORER", "explorer"),
+            ("SAC", "sac"),
+            ("QUITTER", "quitter")
         ]
         
-        menu = MenuAnime.style_simple()
-        choix = menu.afficher("Que faire ?", options)
+        self.nettoyer_ecran()  # Juste nettoyer l'écran
+
+        # Créer et utiliser le menu horizontal simple
+        menu = MenuAnime.style_exploration()
+        resultat = menu.afficher("", options)
         
-        if choix == "repos":
-            return "soin"
+        if resultat == "explorer":
+            return self.explorer()
+        elif resultat == "sac":
+            self.nettoyer_ecran()
+            print("🎒 Fonctionnalité du sac à venir...")
+            self.attendre_utilisateur()
+            return "exploration"
+        elif resultat == "quitter":
+            return "menu"
         else:
             return "exploration"
-    
+
     def rencontrer_monstre(self):
         """
         Le héros rencontre un monstre hostile.
         """
+        if not self.hero:
+            return "menu"
+            
         # Créer un monstre aléatoire
         self.monstre_rencontre = creer_monstre_aleatoire()
-        
-        self.ecrire_message(f"💀 {self.hero.nom} rencontre un {self.monstre_rencontre.race} !")
-        self.attendre_utilisateur()
         self.nettoyer_ecran()
-        
-        # Afficher les informations du monstre
-        print(f"⚔️ RENCONTRE HOSTILE ⚔️")
-        print(f"\n{self.monstre_rencontre.race}")
-        print(f"PV: {self.monstre_rencontre.points_de_vie}")
-        print(f"Force: {self.monstre_rencontre.force}")
-        monstre_or = getattr(self.monstre_rencontre, 'gold', 0)
-        print(f"Récompenses: {monstre_or} or, {self.monstre_rencontre.cuir} cuir")
-        
-        self.attendre_utilisateur()
-        
-        # Le combat commence
+        # ✨ PLUS D'ATTENTE ! Retour direct au combat
         return "combat"
     
     def trouver_tresor(self):
@@ -126,64 +189,54 @@ class PhaseExploration(BaseInterface):
         """
         Le héros trouve de l'or.
         """
+        if not self.hero:
+            return "exploration"
+            
         quantite_or = De.lancer() * 2
         self.hero.gold += quantite_or
         
-        self.ecrire_message(f"💰 {self.hero.nom} trouve {quantite_or} pièces d'or !")
-        self.attendre_utilisateur()
+        # ✨ PAS D'INTERFACE, JUSTE LE MESSAGE SANS ATTENTE
         self.nettoyer_ecran()
+        print(f"💰 {self.hero.nom} trouve {quantite_or} pièces d'or !")
+        print(f"   (Total: {self.hero.gold} or)")
         
-        print(f"💰 TRÉSOR TROUVÉ !")
-        print(f"\n+{quantite_or} or")
-        print(f"Total: {self.hero.gold} or")
-        
-        self.attendre_utilisateur()
+        # ✨ PLUS D'ATTENTE ! Retour direct à l'exploration
         return "exploration"
     
     def trouver_cuir(self):
         """
         Le héros trouve du cuir.
         """
+        if not self.hero:
+            return "exploration"
+            
         quantite_cuir = De.lancer()
         self.hero.cuir += quantite_cuir
         
-        self.ecrire_message(f"🦌 {self.hero.nom} trouve {quantite_cuir} unité(s) de cuir de qualité !")
-        self.attendre_utilisateur()
+        # ✨ PAS D'INTERFACE, JUSTE LE MESSAGE SANS ATTENTE
         self.nettoyer_ecran()
+        print(f"🦌 {self.hero.nom} trouve {quantite_cuir} unité(s) de cuir de qualité !")
+        print(f"   (Total: {self.hero.cuir} cuir)")
         
-        print(f"🦌 MATÉRIAUX TROUVÉS !")
-        print(f"\n+{quantite_cuir} cuir")
-        print(f"Total: {self.hero.cuir} cuir")
-        
-        self.attendre_utilisateur()
+        # ✨ PLUS D'ATTENTE ! Retour direct à l'exploration
         return "exploration"
-    
-    def proposer_action(self):
-        """
-        Propose les actions d'exploration au joueur.
-        """
-        options = [
-            ("EXPLORER LA ZONE", "explorer"),
-            ("SE REPOSER", "repos"),
-            ("RETOUR AU MENU PRINCIPAL", "menu")
-        ]
-        
-        menu = MenuAnime.style_simple()
-        choix = menu.afficher("Que voulez-vous faire ?", options)
-        
-        if choix == "explorer":
-            return self.explorer()
-        elif choix == "repos":
-            return "soin"
-        else:
-            return "menu"
-    
+
     def afficher(self, hero):
         """
         Point d'entrée principal pour la phase d'exploration.
         """
-        self.afficher_interface_exploration(hero)
-        return self.proposer_action()
+        self.hero = hero  # ✨ IMPORTANT : Assigner le héros
+    
+        # Boucle d'exploration continue
+        while True:
+            resultat = self.proposer_action()
+            
+            if resultat == "exploration":
+                # Continue l'exploration - reste dans la boucle
+                continue
+            else:
+                # Retourne le résultat (combat, menu, soin)
+                return resultat
     
     def traiter_action(self, action, *args, **kwargs):
         """
@@ -202,3 +255,4 @@ class PhaseExploration(BaseInterface):
         Retourne le monstre rencontré pour le combat.
         """
         return self.monstre_rencontre
+

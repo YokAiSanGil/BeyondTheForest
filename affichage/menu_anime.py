@@ -49,12 +49,14 @@ class MenuAnime:
                  instructions="↑↓ pour naviguer, Entrée pour sélectionner",
                  afficher_titre_jeu=True, 
                  conserver_ecran=False,
-                 style_fenetre=True):
+                 style_fenetre=True,
+                 menu_horizontal=False):  # ✨ NOUVEAU PARAMÈTRE
         self.instructions = instructions
         self.afficher_titre_jeu = afficher_titre_jeu
         self.conserver_ecran = conserver_ecran
         self.style_fenetre = style_fenetre
-    
+        self.menu_horizontal = menu_horizontal  # ✨ NOUVEAU
+
     @classmethod
     def style_simple(cls):
         """Crée un menu minimaliste sans titre ni fenêtre."""
@@ -63,7 +65,7 @@ class MenuAnime:
     @classmethod
     def style_combat(cls):
         """Crée un menu optimisé pour les combats."""
-        return cls(instructions="↑↓ Sélectionner, Entrée pour confirmer", 
+        return cls(instructions="", 
                 afficher_titre_jeu=False, 
                 conserver_ecran=False,  # Changé de True à False pour permettre la mise à jour
                 style_fenetre=False)
@@ -71,11 +73,22 @@ class MenuAnime:
     @classmethod
     def style_dialogue(cls):
         """Crée un menu optimisé pour les dialogues."""
-        return cls(instructions="⮂ pour choisir, Entrée pour confirmer", 
+        return cls(instructions="", 
                 afficher_titre_jeu=False, 
                 conserver_ecran=True,
                 style_fenetre=True)
         
+    @classmethod
+    def style_exploration(cls):
+        """Style spécialement conçu pour les menus d'exploration (horizontal)."""
+        return cls(
+            instructions="",  # ✨ PLUS D'INSTRUCTIONS
+            afficher_titre_jeu=False,
+            conserver_ecran=True,
+            style_fenetre=False,
+            menu_horizontal=True
+        )
+
     def afficher(self, titre, options):
         """
         Affiche le menu et retourne l'option sélectionnée.
@@ -83,19 +96,22 @@ class MenuAnime:
         curseur = 0
         
         while True:
-            if not self.conserver_ecran:
-                clear_screen()
-            
+            # ✨ RAFRAÎCHISSEMENT POUR MENU HORIZONTAL
+            if self.menu_horizontal:
+                # Pour les menus horizontaux, on nettoie et réaffiche tout
+                if not self.conserver_ecran:
+                    clear_screen()
+            else:
+                # Comportement normal pour les menus verticaux
+                if not self.conserver_ecran:
+                    clear_screen()
+                    
             # Afficher le titre du jeu seulement si demandé
             if self.afficher_titre_jeu:
-                afficher_titre_simple()
+                print(TITLE_SCREEN)
             
             if titre:
-                if self.style_fenetre:
-                    afficher_fenetre(titre, 20, 4)
-                else:
-                    print(titre)
-                print()
+                print(titre)
             
             self._afficher_options_menu(options, curseur)
             
@@ -104,16 +120,29 @@ class MenuAnime:
             if action == 'NAVIGATION':
                 curseur = nouveau_curseur
             elif action == 'SELECTION':
+                cacher_curseur()
+                afficher_curseur()
                 return options[curseur][1]
             elif action in ['ECHAP', 'INTERRUPT']:
+                cacher_curseur()
+                afficher_curseur()
                 return None
             elif action == 'IGNORE':
                 # Touche ignorée, on continue la boucle
                 continue
-    
+
     def _afficher_options_menu(self, options, curseur_actuel):
         """
-        Affiche les options du menu avec le curseur à la position donnée.
+        Affiche les options du menu (vertical ou horizontal selon le paramètre).
+        """
+        if self.menu_horizontal:
+            self._afficher_options_horizontal(options, curseur_actuel)
+        else:
+            self._afficher_options_vertical(options, curseur_actuel)
+
+    def _afficher_options_vertical(self, options, curseur_actuel):
+        """
+        Affiche les options du menu verticalement (comportement original).
         """
         for i, (texte, _) in enumerate(options):
             if i == curseur_actuel:
@@ -121,23 +150,49 @@ class MenuAnime:
             else:
                 print(f"    {texte}")
         print(f"\n{self.instructions}")
-    
+
+    def _afficher_options_horizontal(self, options, curseur_actuel):
+        """
+        Affiche les options du menu horizontalement avec curseur simple.
+        """
+        ligne_options = "    "
+        for i, (texte, _) in enumerate(options):
+            if i == curseur_actuel:
+                ligne_options += f"▶ {texte}    "
+            else:
+                ligne_options += f"  {texte}    "
+        
+        print(ligne_options)
+        # ✨ PLUS D'INSTRUCTIONS AFFICHÉES
+
     def _gerer_curseur_menu(self, curseur_actuel, options):
         """
-        Gère uniquement la logique du curseur et retourne l'action.
+        Gère la logique du curseur (vertical ou horizontal selon le paramètre).
         """
         cacher_curseur()
         
         try:
             touche = lire_fleche_bloquant()
             
-            if touche == 'HAUT':
-                nouveau_curseur = (curseur_actuel - 1) % len(options)
-                return nouveau_curseur, 'NAVIGATION'
-            elif touche == 'BAS':
-                nouveau_curseur = (curseur_actuel + 1) % len(options)
-                return nouveau_curseur, 'NAVIGATION'
-            elif touche == 'ENTREE':
+            if self.menu_horizontal:
+                # Navigation horizontale
+                if touche == 'GAUCHE':
+                    nouveau_curseur = (curseur_actuel - 1) % len(options)
+                    return nouveau_curseur, 'NAVIGATION'
+                elif touche == 'DROITE':
+                    nouveau_curseur = (curseur_actuel + 1) % len(options)
+                    return nouveau_curseur, 'NAVIGATION'
+            else:
+                # Navigation verticale (comportement original)
+                if touche == 'HAUT':
+                    nouveau_curseur = (curseur_actuel - 1) % len(options)
+                    return nouveau_curseur, 'NAVIGATION'
+                elif touche == 'BAS':
+                    nouveau_curseur = (curseur_actuel + 1) % len(options)
+                    return nouveau_curseur, 'NAVIGATION'
+            
+            # Touches communes (Entrée, Échap)
+            if touche == 'ENTREE':
                 afficher_curseur()
                 return curseur_actuel, 'SELECTION'
             elif touche == 'ECHAP':
