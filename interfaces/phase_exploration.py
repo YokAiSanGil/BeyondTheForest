@@ -33,18 +33,12 @@ class PhaseExploration(BaseInterface):
         if not self.hero:
             return "menu"
             
-        # Lancer un dé pour déterminer l'événement
-        resultat_exploration = De.lancer()
-        
-        if resultat_exploration == 1:
+        # Lancer un dé pour déterminer l'événement : 4/6 (~66%) de chances de rencontrer un monstre
+        if De.lancer() <= 4:
             return self.rencontrer_monstre()
-        elif resultat_exploration == 2:
-            return self.trouver_tresor()
-        else:
-            # Plus de chances d'avoir des messages d'exploration (4-6 sur 6)
-            self.afficher_message_exploration()
-            # ✨ IMPORTANT : Retourner "exploration" pour continuer la boucle
-            return "exploration"
+        # Sinon, message d'exploration sans autre événement
+        self.afficher_message_exploration()
+        return "exploration"
 
     def afficher_message_exploration(self):
         """
@@ -136,11 +130,11 @@ class PhaseExploration(BaseInterface):
         """
         Propose les actions d'exploration au joueur avec un menu horizontal simple.
         """
-        # Options du menu
+        # Options du menu principal d'exploration
         options = [
             ("EXPLORER", "explorer"),
             ("SAC", "sac"),
-            ("QUITTER", "quitter")
+            ("OPTIONS", "options")
         ]
         
         # ✨ NE PAS NETTOYER L'ÉCRAN ICI si un message vient d'être affiché
@@ -148,8 +142,10 @@ class PhaseExploration(BaseInterface):
         
         print()  # Ligne vide entre le message et le menu
         
-        # Créer et utiliser le menu horizontal simple
-        menu = MenuAnime.style_exploration()
+        # Créer et utiliser le menu horizontal unique
+        menu = MenuAnime()
+        # Conserver l'écran pour que le message d'exploration reste visible lors du déplacement du curseur
+        menu.conserver_ecran = True
         resultat = menu.afficher("", options)
         
         if resultat == "explorer":
@@ -159,8 +155,27 @@ class PhaseExploration(BaseInterface):
             print("🎒 Fonctionnalité du sac à venir...")
             self.attendre_utilisateur()
             return "exploration"
-        elif resultat == "quitter":
-            return "menu"
+        elif resultat == "options":
+            # Sous-menu Options
+            submenu = [
+                ("RETOUR", "retour"),
+                ("SAUVEGARDER", "sauvegarder"),
+                ("QUITTER", "quitter")
+            ]
+            submenu_menu = MenuAnime()
+            submenu_menu.conserver_ecran = True
+            choix2 = submenu_menu.afficher("OPTIONS", submenu)
+            if choix2 == "retour":
+                return "exploration"
+            elif choix2 == "sauvegarder":
+                self.nettoyer_ecran()
+                print("🔖 Sauvegarde effectuée !")
+                self.attendre_utilisateur()
+                return "exploration"
+            elif choix2 == "quitter":
+                return "menu"
+            else:
+                return "exploration"
         else:
             return "exploration"
 

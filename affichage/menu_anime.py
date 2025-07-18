@@ -42,52 +42,21 @@ def afficher_fenetre(contenu, largeur_min=20, marge=4, retourner_string=False):
 
 class MenuAnime:
     """
-    Module pour créer et afficher des menus avec curseur animé.
-    Permet différentes configurations d'affichage.
+    Menu horizontal unique pour tout le jeu.
     """
-    def __init__(self, 
-                 instructions="↑↓ pour naviguer, Entrée pour sélectionner",
-                 afficher_titre_jeu=True, 
-                 conserver_ecran=False,
-                 style_fenetre=True,
-                 menu_horizontal=False):  # ✨ NOUVEAU PARAMÈTRE
-        self.instructions = instructions
-        self.afficher_titre_jeu = afficher_titre_jeu
-        self.conserver_ecran = conserver_ecran
-        self.style_fenetre = style_fenetre
-        self.menu_horizontal = menu_horizontal  # ✨ NOUVEAU
+    def __init__(self):
+        # Toujours horizontal minimaliste
+        self.instructions = ""
+        self.afficher_titre_jeu = False
+        self.conserver_ecran = False
+        self.style_fenetre = False
+        self.menu_horizontal = True
 
     @classmethod
     def style_simple(cls):
-        """Crée un menu minimaliste sans titre ni fenêtre."""
-        return cls(afficher_titre_jeu=False, style_fenetre=False)
+        """Alias pour le style horizontal par défaut."""
+        return cls()
 
-    @classmethod
-    def style_combat(cls):
-        """Crée un menu optimisé pour les combats."""
-        return cls(instructions="", 
-                afficher_titre_jeu=False, 
-                conserver_ecran=False,  # Changé de True à False pour permettre la mise à jour
-                style_fenetre=False)
-    
-    @classmethod
-    def style_dialogue(cls):
-        """Crée un menu optimisé pour les dialogues."""
-        return cls(instructions="", 
-                afficher_titre_jeu=False, 
-                conserver_ecran=True,
-                style_fenetre=True)
-        
-    @classmethod
-    def style_exploration(cls):
-        """Style spécialement conçu pour les menus d'exploration (horizontal)."""
-        return cls(
-            instructions="",  # ✨ PLUS D'INSTRUCTIONS
-            afficher_titre_jeu=False,
-            conserver_ecran=True,
-            style_fenetre=False,
-            menu_horizontal=True
-        )
 
     def afficher(self, titre, options):
         """

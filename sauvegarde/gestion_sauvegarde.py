@@ -5,11 +5,34 @@ from personnages.hero import Hero
 SAUVEGARDE_PATH = os.path.join(os.getcwd(), 'sauvegarde', 'sauvegarde.json')
 
 
+def lister_sauvegardes() -> list:
+    """
+    Retourne la liste des noms de héros sauvegardés.
+    """
+    if not os.path.exists(SAUVEGARDE_PATH):
+        return []
+    with open(SAUVEGARDE_PATH, 'r', encoding='utf-8') as f:
+        try:
+            data = json.load(f)
+        except json.JSONDecodeError:
+            return []
+    # Attendu: liste de dicts
+    return [entry['hero']['nom'] for entry in data if 'hero' in entry]
+
 def sauvegarder_partie(hero: Hero, monstres_vaincus: int):
     """
-    Sauvegarde l'état de la partie dans un fichier JSON.
+    Sauvegarde ou met à jour la partie du héros dans un fichier JSON (liste de slots).
     """
-    donnees = {
+    os.makedirs(os.path.dirname(SAUVEGARDE_PATH), exist_ok=True)
+    saves = []
+    if os.path.exists(SAUVEGARDE_PATH):
+        with open(SAUVEGARDE_PATH, 'r', encoding='utf-8') as f:
+            try:
+                saves = json.load(f)
+            except json.JSONDecodeError:
+                saves = []
+    # Préparer l'entrée
+    entry = {
         'hero': {
             'nom': hero.nom,
             'race': hero.race,
@@ -21,38 +44,45 @@ def sauvegarder_partie(hero: Hero, monstres_vaincus: int):
         },
         'monstres_vaincus': monstres_vaincus
     }
-    os.makedirs(os.path.dirname(SAUVEGARDE_PATH), exist_ok=True)
+    # Mettre à jour si existant
+    noms = [s['hero']['nom'] for s in saves]
+    if hero.nom in noms:
+        idx = noms.index(hero.nom)
+        saves[idx] = entry
+    else:
+        saves.append(entry)
     with open(SAUVEGARDE_PATH, 'w', encoding='utf-8') as f:
-        json.dump(donnees, f, indent=4, ensure_ascii=False)
+        json.dump(saves, f, indent=4, ensure_ascii=False)
 
-
-def charger_partie():
+def charger_sauvegardes():
     """
-    Charge l'état de la partie depuis le fichier JSON.
-    Retourne un tuple (Hero, monstres_vaincus) ou (None,0) si aucune sauvegarde.
+    Charge toutes les sauvegardes, retourne liste d'entrées.
     """
     if not os.path.exists(SAUVEGARDE_PATH):
-        return None, 0
-
+        return []
     with open(SAUVEGARDE_PATH, 'r', encoding='utf-8') as f:
-        donnees = json.load(f)
+        try:
+            return json.load(f)
+        except json.JSONDecodeError:
+            return []
 
-    hero_data = donnees.get('hero')
-    if not hero_data:
-        return None, 0
+def charger_partie(nom: str) -> tuple:
+    """
+    Charge la partie d'un héros par nom.
+    Retourne (Hero, monstres_vaincus) ou (None,0).
+    """
+    saves = charger_sauvegardes()
+    for entry in saves:
+        hd = entry.get('hero', {})
+        if hd.get('nom') == nom:
+            # Créer le héros
+            hero = Hero(nom=hd['nom'], race=hd['race'])
+            hero.points_de_vie_max = hd['points_de_vie_max']
+            hero.points_de_vie = hd['points_de_vie']
+            hero.gold = hd['gold']
+            hero.cuir = hd['cuir']
+            hero.morts = hd.get('morts', 0)
+            return hero, entry.get('monstres_vaincus', 0)
+    return None, 0
 
-    # Crée le héros avec nom et race, puis restaure les autres attributs
-    hero = Hero(
-        nom=hero_data['nom'],
-        race=hero_data['race']
-    )
-    # Restaurer les points de vie
-    hero.points_de_vie_max = hero_data['points_de_vie_max']
-    hero.points_de_vie = hero_data['points_de_vie']
-    # Restaurer or, cuir et morts
-    hero.gold = hero_data['gold']
-    hero.cuir = hero_data['cuir']
-    hero.morts = hero_data.get('morts', 0)
 
-    monstres_vaincus = donnees.get('monstres_vaincus', 0)
-    return hero, monstres_vaincus

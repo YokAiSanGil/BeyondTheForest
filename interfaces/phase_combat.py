@@ -113,17 +113,32 @@ class PhaseCombat(BaseInterface):
             raise ValueError("Combat non initialisé correctement")
             
         # Afficher l'interface de combat
-        self.afficher_interface_combat()
-        
-        # Créer le menu d'actions
-        menu = MenuAnime.style_simple()
-        options = [
-            ("Attaquer", "attaquer"),
-            ("Fuir", "fuir"),
-            ("Statistiques", "stats")
-        ]
-        
-        return menu.afficher("", options)
+        # Menu de combat manuel pour maintenir l'interface en arrière-plan
+        from utils.outils import lire_fleche_bloquant
+        options = [("Attaquer", "attaquer"), ("Fuir", "fuir"), ("Statistiques", "stats")]
+        curseur = 0
+        while True:
+            # Rafraîchir écran et afficher art + barres
+            clear_screen()
+            self.afficher_interface_combat()
+            # Afficher le menu horizontal
+            ligne = "    "
+            for i, (texte, _) in enumerate(options):
+                if i == curseur:
+                    ligne += f"▶ {texte}    "
+                else:
+                    ligne += f"  {texte}    "
+            print("\n" + ligne)
+            # Lecture touche
+            touche = lire_fleche_bloquant()
+            if touche == 'GAUCHE':
+                curseur = (curseur - 1) % len(options)
+            elif touche == 'DROITE':
+                curseur = (curseur + 1) % len(options)
+            elif touche == 'ENTREE':
+                return options[curseur][1]
+            elif touche == 'ECHAP':
+                return None
     
     def afficher_stats_combat(self):
         """
@@ -138,8 +153,11 @@ class PhaseCombat(BaseInterface):
         art_hero = HUMAIN if self.hero.race == "Humain" else NAIN
         
         # Contenu textuel des stats du héros
+        # Préparer affichage en majuscules, éviter None.upper()
+        nom_hero = (self.hero.nom or "").upper()
+        race_hero = (self.hero.race or "").upper()
         stats_hero_contenu = f"""
-{self.hero.nom.upper()} - {self.hero.race.upper()}
+{nom_hero} - {race_hero}
 - - - - - - - - - - - - - - -
 Endurance   : {self.hero.endurance}
 Force       : {self.hero.force}
@@ -269,13 +287,9 @@ PV          : {self.monstre.points_de_vie}/{self.monstre.points_de_vie_max}
         while self.hero and self.monstre and self.hero.est_vivant() and self.monstre.est_vivant():
             action = self.afficher_menu_actions()
             resultat = self.traiter_action(action)
-            
             if resultat in ["fuite", "abandon"]:
                 stop_music()
                 return resultat
-            
-            if action != "stats":
-                self.traiter_tour_monstre()
     
         # Combat terminé (victoire ou défaite)
         return self.traiter_fin_combat()

@@ -5,11 +5,12 @@ Ce module contient la classe PhaseMenu qui gère tous les menus du jeu.
 
 from .base_interface import BaseInterface
 from personnages import Hero
-from sauvegarde.gestion_sauvegarde import charger_partie
+from sauvegarde.gestion_sauvegarde import sauvegarder_partie, lister_sauvegardes, charger_partie
 from affichage.ascii_art import OPENING, TITLE_SCREEN, NAIN, HUMAIN
 from affichage.animations import ligne_par_ligne
 from affichage.menu_anime import MenuAnime, afficher_fenetre, afficher_titre_simple
 from utils.outils import clear_screen, ecrire_lentement, suivant, pause
+  # gestion_sauvegarde import consolidated above
 
 
 class PhaseMenu(BaseInterface):
@@ -43,20 +44,63 @@ class PhaseMenu(BaseInterface):
             ("CONTINUER", "continuer"),
             ("QUITTER", "quitter")
         ]
+        # Menu principal horizontal minimal avec OPTIONS
         menu = MenuAnime()
-        return menu.afficher("MENU", options)
+        choix = menu.afficher("", options)
+        if choix == "options":
+            # Sous-menu Options du menu principal
+            submenu = [
+                ("TABLEAU", "tableau"),
+                ("LIST_JOUER", "list_jouer"),
+                ("EFFACER SAV", "effacer_sav"),
+                ("RETOUR", "retour"),
+                ("QUITTER", "quitter")
+            ]
+            sous = MenuAnime().afficher("OPTIONS", submenu)
+            if sous == "tableau":
+                self.nettoyer_ecran()
+                print("📊 Tableau non disponible...")
+                self.attendre_utilisateur()
+                return self.afficher_menu_principal()
+            elif sous == "list_jouer":
+                self.nettoyer_ecran()
+                print("📋 Liste des joueurs non disponible...")
+                self.attendre_utilisateur()
+                return self.afficher_menu_principal()
+            elif sous == "effacer_sav":
+                # Effacer le fichier de sauvegarde
+                import os
+                from sauvegarde.gestion_sauvegarde import SAUVEGARDE_PATH
+                if os.path.exists(SAUVEGARDE_PATH): os.remove(SAUVEGARDE_PATH)
+                self.nettoyer_ecran()
+                print("🗑️  Sauvegarde effacée !")
+                self.attendre_utilisateur()
+                return self.afficher_menu_principal()
+            elif sous == "retour":
+                return self.afficher_menu_principal()
+            elif sous == "quitter":
+                return "quitter"
+            else:
+                return self.afficher_menu_principal()
+        return choix
     
     def continuer_jeu(self):
         """
         Charge et propose de reprendre une partie sauvegardée.
         """
         self.nettoyer_ecran()
-        hero, monstres_vaincus = charger_partie()
-        if hero is None:
+        saves = lister_sauvegardes()
+        if not saves:
             self.ecrire_message("Aucune sauvegarde trouvée.")
             self.attendre_utilisateur()
             return None
-        # Afficher les statistiques de la partie sauvegardée
+        # Sélection d'un héros sauvegardé
+        options_heroes = [(nom, nom) for nom in saves]
+        choix_nom = MenuAnime().afficher("HÉROS SAUVEGARDÉS", options_heroes)
+        if not choix_nom:
+            return None
+        hero, monstres_vaincus = charger_partie(choix_nom)
+        # Afficher les statistiques de la partie sélectionnée
         stats_contenu = f"""
 {hero.nom} le {hero.race}
 
@@ -67,10 +111,10 @@ Victoires: {monstres_vaincus}
 Morts    : {hero.morts}
 """
         afficher_fenetre(stats_contenu, largeur_min=30, marge=4)
-        # Demander confirmation pour charger
-        options = [("OUI, reprendre", True), ("NON, abandonner", False)]
-        choix = MenuAnime().afficher("CHARGER PARTIE ?", options)
-        if choix:
+        # Confirmation pour charger
+        options_conf = [("OUI, reprendre", True), ("NON, abandonner", False)]
+        confirmer = MenuAnime().afficher("CHARGER PARTIE ?", options_conf)
+        if confirmer:
             return hero, monstres_vaincus
         return None
     
@@ -110,8 +154,14 @@ Morts    : {hero.morts}
         self.ecrire_message("Bienvenue, brave aventurier !")
         self.ecrire_message("Quel est votre nom ?")
         nom = input("► ")
+        # Vérifier que le nom n'est pas vide
         while not nom.strip():
             print("Vous devez avoir un nom, brave Hero ...")
+            nom = input("► ")
+        # Empêcher les doublons de noms
+        existing = lister_sauvegardes()
+        while nom in existing:
+            print(f"Le nom '{nom}' est déjà utilisé. Choisissez un autre nom.")
             nom = input("► ")
 
         self.nettoyer_ecran()
@@ -125,7 +175,7 @@ Morts    : {hero.morts}
             ("HUMAIN (+1 Force, +1 Endurance)", "Humain"),
             ("NAIN (+2 Endurance)", "Nain")
         ]
-        menu = MenuAnime.style_simple()
+        menu = MenuAnime()
         race = menu.afficher(f"Choisissez une nouvelle forme physique.", options_race)
 
         if race is None:
@@ -155,6 +205,8 @@ Cuir          : {hero.cuir}
 """
         afficher_fenetre(stats_contenu, largeur_min=30, marge=4)
         self.attendre_utilisateur()
+        # Sauvegarde automatique de la nouvelle partie
+        sauvegarder_partie(hero, 0)
         return hero
     
     def afficher_stats_finales(self, hero, monstres_vaincus):

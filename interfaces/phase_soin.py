@@ -47,7 +47,8 @@ class PhaseSoin(BaseInterface):
                 ("SE REPOSER (Récupère tous les PV)", "repos"), 
                 ("CONTINUER L'AVENTURE", "continuer")
             ]
-            menu = MenuAnime.style_simple()
+            # Menu horizontal unique
+            menu = MenuAnime()
             choix = menu.afficher("Que voulez-vous faire ?", options_soin)
             
             if choix == "repos":
