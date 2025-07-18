@@ -7,7 +7,7 @@ from .base_interface import BaseInterface
 from personnages.monstre import Monster, creer_monstre_aleatoire
 from affichage.widgets import creer_barre_de_vie
 from affichage.ascii_art import HUMAIN, NAIN
-from menu_anime import MenuAnime
+from affichage.menu_anime import MenuAnime
 from utils.outils import clear_screen, ecrire_lentement, suivant
 from utils.de6faces import De
 import random

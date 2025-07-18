@@ -226,7 +226,7 @@ PV          : {self.monstre.points_de_vie}/{self.monstre.points_de_vie_max}
         """
         self.initialiser_combat(hero, monstre)
         
-        while self.hero and self.monstre and self.hero.est_vivant() and self.monstre.est_vivant():
+        while self.hero.est_vivant() and self.monstre.est_vivant():
             self.afficher_interface_combat()
             action = self.afficher_menu_actions()
             

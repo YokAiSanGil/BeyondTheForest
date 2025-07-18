@@ -7,7 +7,7 @@ from .base_interface import BaseInterface
 from personnages import Hero
 from affichage.ascii_art import OPENING, TITLE_SCREEN, NAIN, HUMAIN
 from affichage.animations import ligne_par_ligne
-from menu_anime import MenuAnime, afficher_fenetre, afficher_titre_simple
+from affichage.menu_anime import MenuAnime, afficher_fenetre, afficher_titre_simple
 from utils.outils import clear_screen, ecrire_lentement, suivant, pause
 
 

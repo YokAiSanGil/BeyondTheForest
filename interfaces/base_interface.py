@@ -4,7 +4,8 @@ Ce module contient la classe abstraite BaseInterface dont héritent toutes les p
 """
 
 from abc import ABC, abstractmethod
-from menu_anime import MenuAnime
+from typing import Any, Optional
+from affichage.menu_anime import MenuAnime
 from utils.outils import clear_screen, ecrire_lentement, suivant
 
 
@@ -15,11 +16,11 @@ class BaseInterface(ABC):
     """
     
     def __init__(self):
-        self.menu = None
-        self.result = None
+        self.menu: Optional[MenuAnime] = None
+        self.result: Any = None
     
     @abstractmethod
-    def afficher(self, *args, **kwargs):
+    def afficher(self, *args, **kwargs) -> Any:
         """
         Méthode abstraite pour afficher l'interface.
         Doit être implémentée par chaque classe fille.
@@ -27,7 +28,7 @@ class BaseInterface(ABC):
         pass
     
     @abstractmethod
-    def traiter_action(self, action, *args, **kwargs):
+    def traiter_action(self, action, *args, **kwargs) -> Any:
         """
         Méthode abstraite pour traiter les actions utilisateur.
         Doit être implémentée par chaque classe fille.
