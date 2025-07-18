@@ -5,6 +5,7 @@ Ce module contient la classe PhaseMenu qui gère tous les menus du jeu.
 
 from .base_interface import BaseInterface
 from personnages import Hero
+from sauvegarde.gestion_sauvegarde import charger_partie
 from affichage.ascii_art import OPENING, TITLE_SCREEN, NAIN, HUMAIN
 from affichage.animations import ligne_par_ligne
 from affichage.menu_anime import MenuAnime, afficher_fenetre, afficher_titre_simple
@@ -47,12 +48,30 @@ class PhaseMenu(BaseInterface):
     
     def continuer_jeu(self):
         """
-        Gère la tentative de chargement d'une partie existante.
+        Charge et propose de reprendre une partie sauvegardée.
         """
         self.nettoyer_ecran()
-        self.ecrire_message("La fonctionnalité de sauvegarde n'est pas encore implémentée...")
-        self.ecrire_message("Revenez bientôt pour cette fonctionnalité !")
-        pause(2)
+        hero, monstres_vaincus = charger_partie()
+        if hero is None:
+            self.ecrire_message("Aucune sauvegarde trouvée.")
+            self.attendre_utilisateur()
+            return None
+        # Afficher les statistiques de la partie sauvegardée
+        stats_contenu = f"""
+{hero.nom} le {hero.race}
+
+PV       : {hero.points_de_vie}/{hero.points_de_vie_max}
+Or       : {hero.gold}
+Cuir     : {hero.cuir}
+Victoires: {monstres_vaincus}
+Morts    : {hero.morts}
+"""
+        afficher_fenetre(stats_contenu, largeur_min=30, marge=4)
+        # Demander confirmation pour charger
+        options = [("OUI, reprendre", True), ("NON, abandonner", False)]
+        choix = MenuAnime().afficher("CHARGER PARTIE ?", options)
+        if choix:
+            return hero, monstres_vaincus
         return None
     
     def confirmer_quitter(self):
@@ -123,8 +142,10 @@ class PhaseMenu(BaseInterface):
         ASCII = NAIN if hero.race == "Nain" else HUMAIN
         ligne_par_ligne(ASCII, 0.2)
         pause(1)
+        # Préparer nom affiché en majuscules (éviter None.upper())
+        nom_affiche = hero.nom.upper() if hero.nom else ""
         stats_contenu = f"""
-{hero.nom.upper()} {('le ' if hero.race == "Nain" else "l'")}{hero.race.upper()}
+{nom_affiche} {('le ' if hero.race == "Nain" else "l'")}{hero.race.upper()}
 
 Endurance     : {hero.endurance}
 Force         : {hero.force}

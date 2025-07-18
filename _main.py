@@ -4,10 +4,12 @@ Script principal utilisant l'interface Dragon Quest avec architecture modulaire.
 from utils.music import *
 from interfaces.phase_menu import PhaseMenu
 from interfaces.phase_combat import PhaseCombat
+
 from interfaces.phase_exploration import PhaseExploration
 from affichage.widgets import afficher_stats_finales
 from utils.outils import clear_screen, ecrire_lentement, pause, suivant
 import random
+from interfaces.phase_soin import PhaseSoin
 
 def main():
     """
@@ -17,6 +19,7 @@ def main():
     phase_menu = PhaseMenu()
     phase_combat = PhaseCombat()
     phase_exploration = PhaseExploration()
+    phase_soin = PhaseSoin()
     
     # Variables de jeu
     hero = None
@@ -30,42 +33,42 @@ def main():
         # Affichage du menu principal
         choix = phase_menu.afficher_menu_principal()
         
-        if choix == "nouveau":
-            # Nouvelle partie
-            hero = phase_menu.creer_hero()
-            if hero is None:
-                continue
-            
-            monstres_vaincus = 0
-            clear_screen()
-            ecrire_lentement(f"Vous entrez dans la forêt des âmes damnées...")
-            pause(3)
-            
+        if choix in ("nouveau", "continuer"):
+            # Démarrer ou reprendre une partie
+            if choix == "nouveau":
+                hero = phase_menu.creer_hero()
+                monstres_vaincus = 0
+                if hero is None:
+                    continue
+                clear_screen()
+                ecrire_lentement("Vous entrez dans la forêt des âmes damnées...")
+                pause(3)
+            else:
+                result = phase_menu.continuer_jeu()
+                if result is None:
+                    continue
+                hero, monstres_vaincus = result
+                clear_screen()
+                ecrire_lentement("Vous reprenez votre aventure au plus profond de la forêt...")
+                pause(3)
+
             # Boucle de jeu
             while hero.est_vivant():
-                # Phase d'exploration
                 resultat_exploration = phase_exploration.afficher(hero)
-                
+
                 if resultat_exploration == "combat":
-                    # Un monstre a été rencontré
                     monstre = phase_exploration.get_monstre_rencontre()
-                    
+
                     if monstre is not None:
-                        # Phase de combat
                         resultat_combat = phase_combat.afficher(hero, monstre)
-                        
+
                         if resultat_combat == "victoire":
                             monstres_vaincus += 1
-                            # Soin automatique après victoire
                             phase_soin.afficher(hero)
-                            
                         elif resultat_combat == "defaite":
                             break
-                            
                         elif resultat_combat == "fuite":
-                            # Soin automatique après fuite
                             phase_soin.afficher(hero)
-                            
                         elif resultat_combat == "abandon":
                             ecrire_lentement("Vous quittez votre forme physique...")
                             suivant()
@@ -73,22 +76,15 @@ def main():
                     else:
                         ecrire_lentement("Erreur : aucun monstre trouvé pour le combat.")
                         continue
-                        
+
                 elif resultat_exploration == "soin":
-                    # Phase de soin demandée
                     phase_soin.afficher(hero)
-                    
                 elif resultat_exploration == "menu":
-                    # Retour au menu principal
                     break
-            
+
             # Fin du jeu - affichage des stats finales
             afficher_stats_finales(hero, monstres_vaincus)
-            
-        elif choix == "continuer":
-            # Continuer une partie (pas encore implémenté)
-            phase_menu.continuer_jeu()
-            
+
         elif choix == "quitter":
             # Quitter le jeu
             if phase_menu.confirmer_quitter():

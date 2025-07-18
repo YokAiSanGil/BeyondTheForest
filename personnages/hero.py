@@ -13,6 +13,8 @@ class Hero(Personnage):
         super().__init__(race, nom)
         self.gold = 0
         self.cuir = 0
+        # Nombre de fois que le héros est mort (pour la sauvegarde)
+        self.morts = 0
 
     @property
     def endurance(self):

@@ -43,19 +43,20 @@ class PhaseExploration(BaseInterface):
         else:
             # Plus de chances d'avoir des messages d'exploration (4-6 sur 6)
             self.afficher_message_exploration()
-            return "exploration"  # Continue l'exploration
+            # ✨ IMPORTANT : Retourner "exploration" pour continuer la boucle
+            return "exploration"
 
     def afficher_message_exploration(self):
         """
-        Affiche un message d'exploration sans attendre l'utilisateur.
+        Affiche un message d'exploration avec le menu en dessous.
         """
-        # ✨ PAS D'INTERFACE, JUSTE LE MESSAGE SANS ATTENTE
+        # ✨ AFFICHER LE MESSAGE PUIS LE MENU EN DESSOUS
         self.nettoyer_ecran()
         
         # Afficher le message d'exploration
         self.message_exploration_aleatoire()
         
-        # ✨ PLUS D'ATTENTE ! Retour direct au menu
+        # ✨ NE PAS RETOURNER IMMÉDIATEMENT - Le menu s'affichera après
 
     def message_exploration_aleatoire(self):
         """
@@ -142,8 +143,11 @@ class PhaseExploration(BaseInterface):
             ("QUITTER", "quitter")
         ]
         
-        self.nettoyer_ecran()  # Juste nettoyer l'écran
-
+        # ✨ NE PAS NETTOYER L'ÉCRAN ICI si un message vient d'être affiché
+        # L'écran a déjà été nettoyé dans afficher_message_exploration()
+        
+        print()  # Ligne vide entre le message et le menu
+        
         # Créer et utiliser le menu horizontal simple
         menu = MenuAnime.style_exploration()
         resultat = menu.afficher("", options)

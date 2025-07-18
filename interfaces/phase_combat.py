@@ -106,13 +106,24 @@ class PhaseCombat(BaseInterface):
     
     def afficher_menu_actions(self):
         """
-        Affiche le menu des actions de combat et retourne l'action choisie.
+        Affiche le menu des actions possibles et retourne le choix du joueur.
         """
-        if not self.hero or not self.menu_combat:
+        # ✨ VÉRIFICATION CORRIGÉE
+        if not self.hero or not self.monstre:
             raise ValueError("Combat non initialisé correctement")
             
-        options_combat = [("FRAPPER", "attaquer"), ("FUIR", "fuir"), ("STATS", "stats")]
-        return self.menu_combat.afficher(f"Que fait {self.hero.nom} ?", options_combat)
+        # Afficher l'interface de combat
+        self.afficher_interface_combat()
+        
+        # Créer le menu d'actions
+        menu = MenuAnime.style_simple()
+        options = [
+            ("Attaquer", "attaquer"),
+            ("Fuir", "fuir"),
+            ("Statistiques", "stats")
+        ]
+        
+        return menu.afficher("", options)
     
     def afficher_stats_combat(self):
         """
@@ -250,16 +261,22 @@ PV          : {self.monstre.points_de_vie}/{self.monstre.points_de_vie_max}
         """
         Point d'entrée principal pour la phase de combat.
         """
+        # ✨ INITIALISER D'ABORD LE COMBAT
         self.initialiser_combat(hero, monstre)
         
-        while self.hero and self.monstre and self.hero.est_vivant() and self.monstre.est_vivant():
-            self.afficher_interface_combat()
-            action = self.afficher_menu_actions()
-            
-            resultat = self.traiter_action(action)
-            if resultat is not None:
-                return resultat
+        # ✨ PAS BESOIN DE RÉINITIALISER - déjà fait dans initialiser_combat()
         
+        while self.hero and self.monstre and self.hero.est_vivant() and self.monstre.est_vivant():
+            action = self.afficher_menu_actions()
+            resultat = self.traiter_action(action)
+            
+            if resultat in ["fuite", "abandon"]:
+                stop_music()
+                return resultat
+            
+            if action != "stats":
+                self.traiter_tour_monstre()
+    
         # Combat terminé (victoire ou défaite)
         return self.traiter_fin_combat()
     
