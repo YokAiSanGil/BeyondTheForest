@@ -23,6 +23,7 @@ class PhaseExploration(BaseInterface):
         super().__init__()
         self.hero = None
         self.monstre_rencontre = None
+        self.dernier_message = "Vous êtes prêt à explorer ... " # Message initial par défaut
     
 
 
@@ -37,20 +38,15 @@ class PhaseExploration(BaseInterface):
         if De.lancer() <= 4:
             return self.rencontrer_monstre()
         # Sinon, message d'exploration sans autre événement
-        self.afficher_message_exploration()
+        self.generer_message_exploration()
         return "exploration"
 
-    def afficher_message_exploration(self):
+    def generer_message_exploration(self):
         """
-        Affiche un message d'exploration avec le menu en dessous.
+        Génère un message d'exploration et le stocke dans self.dernier_message.
         """
-        # ✨ AFFICHER LE MESSAGE PUIS LE MENU EN DESSOUS
-        self.nettoyer_ecran()
-        
         # Afficher le message d'exploration
         self.message_exploration_aleatoire()
-        
-        # ✨ NE PAS RETOURNER IMMÉDIATEMENT - Le menu s'affichera après
 
     def message_exploration_aleatoire(self):
         """
@@ -96,7 +92,7 @@ class PhaseExploration(BaseInterface):
             ])
         
         message = random.choice(messages)
-        print(f"\n🌲 {message}")
+        self.dernier_message = f"\n{message}"
         
         # Parfois, ajouter une seconde chance de trouver quelque chose
         chance_seconde = De.lancer()
@@ -115,7 +111,7 @@ class PhaseExploration(BaseInterface):
             # Petit bonus d'or
             or_bonus = De.lancer()
             self.hero.gold += or_bonus
-            print(f"✨ Bonus ! +{or_bonus} or trouvé en fouillant.")
+            self.dernier_message += f"\n✨ Bonus ! +{or_bonus} or trouvé en fouillant."
         else:
             # Message d'ambiance sans récompense
             messages_bonus = [
@@ -137,22 +133,19 @@ class PhaseExploration(BaseInterface):
             ("OPTIONS", "options")
         ]
         
-        # ✨ NE PAS NETTOYER L'ÉCRAN ICI si un message vient d'être affiché
-        # L'écran a déjà été nettoyé dans afficher_message_exploration()
-        
-        print()  # Ligne vide entre le message et le menu
-        
         # Créer et utiliser le menu horizontal unique
         menu = MenuAnime()
-        # Conserver l'écran pour que le message d'exploration reste visible lors du déplacement du curseur
-        menu.conserver_ecran = True
-        resultat = menu.afficher("", options)
+        # On laisse le menu gérer le rafraîchissement complet (clear + message + options)
+        menu.conserver_ecran = False
+
+        # On passe le dernier message comme titre du menu
+        resultat = menu.afficher(self.dernier_message, options)
         
         if resultat == "explorer":
             return self.explorer()
         elif resultat == "sac":
             self.nettoyer_ecran()
-            print("🎒 Fonctionnalité du sac à venir...")
+            print("Fonctionnalité du sac à venir...")
             self.attendre_utilisateur()
             return "exploration"
         elif resultat == "options":
@@ -163,7 +156,7 @@ class PhaseExploration(BaseInterface):
                 ("QUITTER", "quitter")
             ]
             submenu_menu = MenuAnime()
-            submenu_menu.conserver_ecran = True
+            submenu_menu.conserver_ecran = False
             choix2 = submenu_menu.afficher("OPTIONS", submenu)
             if choix2 == "retour":
                 return "exploration"
@@ -189,6 +182,7 @@ class PhaseExploration(BaseInterface):
         # Créer un monstre aléatoire
         self.monstre_rencontre = creer_monstre_aleatoire()
         self.nettoyer_ecran()
+        self.dernier_message = "Vous reprenez votre exploration ..."
         # ✨ PLUS D'ATTENTE ! Retour direct au combat
         return "combat"
     
@@ -214,12 +208,9 @@ class PhaseExploration(BaseInterface):
         quantite_or = De.lancer() * 2
         self.hero.gold += quantite_or
         
-        # ✨ PAS D'INTERFACE, JUSTE LE MESSAGE SANS ATTENTE
-        self.nettoyer_ecran()
-        print(f"💰 {self.hero.nom} trouve {quantite_or} pièces d'or !")
-        print(f"   (Total: {self.hero.gold} or)")
+        self.dernier_message = f"\n💰 {self.hero.nom} trouve {quantite_or} pièces d'or !\n(Total: {self.hero.gold} or)"
         
-        # ✨ PLUS D'ATTENTE ! Retour direct à l'exploration
+        # Retour à l'exploration
         return "exploration"
     
     def trouver_cuir(self):
@@ -232,12 +223,9 @@ class PhaseExploration(BaseInterface):
         quantite_cuir = De.lancer()
         self.hero.cuir += quantite_cuir
         
-        # ✨ PAS D'INTERFACE, JUSTE LE MESSAGE SANS ATTENTE
-        self.nettoyer_ecran()
-        print(f"🦌 {self.hero.nom} trouve {quantite_cuir} unité(s) de cuir de qualité !")
-        print(f"   (Total: {self.hero.cuir} cuir)")
+        self.dernier_message = f"\n🪙 {self.hero.nom} trouve {quantite_cuir} morceaux de cuir !\n(Total: {self.hero.cuir} cuir)"
         
-        # ✨ PLUS D'ATTENTE ! Retour direct à l'exploration
+        # Retour à l'exploration
         return "exploration"
 
     def afficher(self, hero):
