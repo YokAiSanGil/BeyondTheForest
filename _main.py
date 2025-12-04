@@ -96,6 +96,18 @@ def main():
                 break
 
 if __name__ == "__main__":
-    clear_screen()
-    main()
+    try:
+        clear_screen()
+        main()
+    except KeyboardInterrupt:
+        print("\n\nInterruption par l'utilisateur.")
+    except Exception as e:
+        print(f"\n\nUne erreur inattendue est survenue : {e}")
+        import traceback
+        traceback.print_exc()
+    finally:
+        # Nettoyage final pour garantir un terminal propre
+        stop_music()
+        print("\033[?25h") # Réafficher le curseur
+        print("\nFin du programme.")
 
