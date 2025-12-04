@@ -3,6 +3,7 @@ Module phase_menu - Interface pour les menus principaux et la création de héro
 Ce module contient la classe PhaseMenu qui gère tous les menus du jeu.
 """
 
+import uuid
 from .base_interface import BaseInterface
 from personnages import Hero
 from sauvegarde.gestion_sauvegarde import sauvegarder_partie, lister_sauvegardes, charger_partie
@@ -95,11 +96,13 @@ class PhaseMenu(BaseInterface):
             self.attendre_utilisateur()
             return None
         # Sélection d'un héros sauvegardé
-        options_heroes = [(nom, nom) for nom in saves]
-        choix_nom = MenuAnime().afficher("HÉROS SAUVEGARDÉS", options_heroes)
-        if not choix_nom:
+        # saves est une liste de dicts {'nom': ..., 'id': ...}
+        options_heroes = [(s['nom'], s['id'] if s['id'] else s['nom']) for s in saves]
+        
+        choix_id = MenuAnime().afficher("HÉROS SAUVEGARDÉS", options_heroes)
+        if not choix_id:
             return None
-        hero, monstres_vaincus = charger_partie(choix_nom)
+        hero, monstres_vaincus = charger_partie(choix_id)
         # Afficher les statistiques de la partie sélectionnée
         stats_contenu = f"""
 {hero.nom} le {hero.race}
@@ -159,8 +162,9 @@ Morts    : {hero.morts}
             print("Vous devez avoir un nom, brave Hero ...")
             nom = input("► ")
         # Empêcher les doublons de noms
-        existing = lister_sauvegardes()
-        while nom in existing:
+        existing_saves = lister_sauvegardes()
+        existing_names = [s['nom'] for s in existing_saves]
+        while nom in existing_names:
             print(f"Le nom '{nom}' est déjà utilisé. Choisissez un autre nom.")
             nom = input("► ")
 
@@ -182,6 +186,7 @@ Morts    : {hero.morts}
             return self.creer_hero()  # Récursion en cas d'annulation
         
         hero = Hero(nom, race)
+        hero.id = str(uuid.uuid4())
         self.nettoyer_ecran()
         self.ecrire_message('... vous possédez une nouvelle forme ...', 0.07)
         self.ecrire_message(f"{hero.nom}, la forêt vous appelle.", 0.07)

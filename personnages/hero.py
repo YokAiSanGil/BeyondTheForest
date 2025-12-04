@@ -11,6 +11,7 @@ class Hero(Personnage):
     """
     def __init__(self, nom, race):
         super().__init__(race, nom)
+        self.id = None # Identifiant unique pour la sauvegarde
         self.gold = 0
         self.cuir = 0
         # Nombre de fois que le héros est mort (pour la sauvegarde)
