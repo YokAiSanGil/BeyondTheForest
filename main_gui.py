@@ -12,11 +12,28 @@ COLOR_PANEL_BG = (15, 15, 20)   # Gris sombre pour les fonds de panneaux
 COLOR_BORDER = (100, 100, 120)  # Gris bleuté pour les bordures
 COLOR_TEXT = (200, 200, 200)    # Blanc cassé
 
-# Dimensions des zones
-SIDEBAR_WIDTH = 320
-BOTTOM_HEIGHT = 240
-VIEWPORT_WIDTH = SCREEN_WIDTH - SIDEBAR_WIDTH
-VIEWPORT_HEIGHT = SCREEN_HEIGHT - BOTTOM_HEIGHT
+# Dimensions des zones (ajustées avec marges)
+MARGIN = 20  # Marge externe et entre les fenêtres
+SIDEBAR_WIDTH = 300
+
+# Calculs dynamiques pour que ça rentre dans l'écran
+# Panneau Gauche
+PANEL_STATS_X = MARGIN
+PANEL_STATS_Y = MARGIN
+PANEL_STATS_W = SIDEBAR_WIDTH
+PANEL_STATS_H = SCREEN_HEIGHT - (2 * MARGIN)
+
+# Panneau Haut-Droite (Viewport)
+PANEL_VIEW_X = PANEL_STATS_X + PANEL_STATS_W + MARGIN
+PANEL_VIEW_Y = MARGIN
+PANEL_VIEW_W = SCREEN_WIDTH - PANEL_VIEW_X - MARGIN
+PANEL_VIEW_H = 400 # Hauteur fixe pour le viewport
+
+# Panneau Bas-Droite (Dialogue)
+PANEL_DIALOG_X = PANEL_VIEW_X
+PANEL_DIALOG_Y = PANEL_VIEW_Y + PANEL_VIEW_H + MARGIN
+PANEL_DIALOG_W = PANEL_VIEW_W
+PANEL_DIALOG_H = SCREEN_HEIGHT - PANEL_DIALOG_Y - MARGIN
 
 class GameGUI:
     def __init__(self):
@@ -64,31 +81,33 @@ class GameGUI:
                     print("Entrée")
 
     def draw_panel(self, x, y, width, height, title=None):
-        """Dessine un panneau générique avec bordure"""
+        """Dessine un panneau flottant avec bords arrondis"""
         rect = pygame.Rect(x, y, width, height)
         
-        # Fond
-        pygame.draw.rect(self.screen, COLOR_PANEL_BG, rect)
-        # Bordure
-        pygame.draw.rect(self.screen, COLOR_BORDER, rect, 2)
+        # Fond avec coins arrondis
+        pygame.draw.rect(self.screen, COLOR_PANEL_BG, rect, border_radius=15)
         
-        # Titre (optionnel, pour le debug visuel)
+        # Bordure avec coins arrondis
+        pygame.draw.rect(self.screen, COLOR_BORDER, rect, 2, border_radius=15)
+        
+        # Titre
         if title:
             text_surf = self.font.render(title, True, COLOR_BORDER)
-            self.screen.blit(text_surf, (x + 10, y + 10))
+            # Centrer le titre un peu mieux
+            self.screen.blit(text_surf, (x + 20, y + 15))
 
     def draw(self):
         """Boucle de rendu graphique"""
         self.screen.fill(COLOR_BG)
 
         # 1. Panneau Latéral (Gauche) - Stats
-        self.draw_panel(0, 0, SIDEBAR_WIDTH, SCREEN_HEIGHT, "STATS (HEROS)")
+        self.draw_panel(PANEL_STATS_X, PANEL_STATS_Y, PANEL_STATS_W, PANEL_STATS_H, "STATS")
 
         # 2. Viewport (Haut-Droite) - Monde/Combat
-        self.draw_panel(SIDEBAR_WIDTH, 0, VIEWPORT_WIDTH, VIEWPORT_HEIGHT, "VIEWPORT (MONDE)")
+        self.draw_panel(PANEL_VIEW_X, PANEL_VIEW_Y, PANEL_VIEW_W, PANEL_VIEW_H, "VIEWPORT")
 
         # 3. Panneau de Dialogue (Bas-Droite) - Logs/Input
-        self.draw_panel(SIDEBAR_WIDTH, VIEWPORT_HEIGHT, VIEWPORT_WIDTH, BOTTOM_HEIGHT, "DIALOGUE / INPUT")
+        self.draw_panel(PANEL_DIALOG_X, PANEL_DIALOG_Y, PANEL_DIALOG_W, PANEL_DIALOG_H, "DIALOGUE")
 
         # 4. Overlay Dithering (toujours à la fin)
         self.screen.blit(self.dither_surface, (0, 0))
