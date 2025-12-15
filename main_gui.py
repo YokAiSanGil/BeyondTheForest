@@ -15,10 +15,18 @@ def main():
 
     # Boucle principale du jeu (Chef d'orchestre)
     while gui.running:
-        choix = phase_menu.afficher_menu_principal()
+        resultat_menu = phase_menu.afficher_menu_principal()
+        choix = resultat_menu[0]
+        hero = None
         
         if choix == "nouveau":
             hero = phase_menu.creer_hero()
+        elif choix == "continuer":
+            hero = resultat_menu[1]
+        elif choix == "quitter":
+            break
+            
+        if hero:
             phase_exploration.reset()
             # Lancement de la boucle de jeu
             while gui.running:
@@ -43,11 +51,6 @@ def main():
                 elif resultat == "quitter":
                     gui.running = False
                     break
-                    
-        elif choix == "continuer":
-            print("Continuer jeu (TODO)")
-        elif choix == "quitter":
-            break
 
 if __name__ == "__main__":
     main()

@@ -125,4 +125,25 @@ def charger_partie(identifiant: str) -> tuple:
             return hero, entry.get('monstres_vaincus', 0)
     return None, 0
 
+def supprimer_sauvegarde(hero_id: str):
+    """
+    Supprime la sauvegarde correspondant à l'ID du héros.
+    """
+    if not os.path.exists(SAUVEGARDE_PATH):
+        return
+
+    saves = charger_sauvegardes()
+    new_saves = []
+    found = False
+    
+    for save in saves:
+        if 'hero' in save and save['hero'].get('id') == hero_id:
+            found = True
+            continue # On saute cette sauvegarde
+        new_saves.append(save)
+    
+    if found:
+        with open(SAUVEGARDE_PATH, 'w', encoding='utf-8') as f:
+            json.dump(new_saves, f, indent=4, ensure_ascii=False)
+
 

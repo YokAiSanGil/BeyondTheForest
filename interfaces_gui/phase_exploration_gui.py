@@ -3,6 +3,7 @@ import random
 from affichage_gui.gui_manager import GuiManager, COLOR_HIGHLIGHT, COLOR_TEXT, PANEL_VIEW_X, PANEL_VIEW_Y, PANEL_VIEW_W, PANEL_VIEW_H, PANEL_DIALOG_X, PANEL_DIALOG_Y, PANEL_DIALOG_W
 from utils.de6faces import De
 from personnages.monstre import creer_monstre_aleatoire
+from sauvegarde.gestion_sauvegarde import sauvegarder_partie
 
 class PhaseExplorationGUI:
     def __init__(self):
@@ -101,5 +102,9 @@ class PhaseExplorationGUI:
             soin = self.hero.points_de_vie_max // 2
             self.hero.points_de_vie = min(self.hero.points_de_vie + soin, self.hero.points_de_vie_max)
             self.ajouter_log(f"💤 Vous vous reposez (+{soin} PV).")
+            sauvegarder_partie(self.hero, 0) # Sauvegarde auto
+            self.ajouter_log("Partie sauvegardée.")
         else:
             self.ajouter_log("Vous êtes déjà en pleine forme.")
+            sauvegarder_partie(self.hero, 0) # Sauvegarde auto même si pas de soin
+            self.ajouter_log("Partie sauvegardée.")

@@ -1,5 +1,6 @@
 import pygame
 import sys
+from affichage.ascii_art import HUMAIN, NAIN
 
 # --- CONFIGURATION ---
 SCREEN_WIDTH = 1280
@@ -100,9 +101,16 @@ class GuiManager:
         self.draw_panel(PANEL_STATS_X, PANEL_STATS_Y, PANEL_STATS_W, PANEL_STATS_H, title)
         
         if hero:
+            # Affichage de l'avatar
+            art = HUMAIN if hero.race == "Humain" else NAIN
+            lines = art.strip().split('\n')
+            avatar_y = PANEL_STATS_Y + 40
+            for i, line in enumerate(lines):
+                self.draw_text(line, PANEL_STATS_X + 20, avatar_y + i * 15, (150, 150, 150))
+
             # Affichage des stats du héros
             start_x = PANEL_STATS_X + 20
-            start_y = PANEL_STATS_Y + 50
+            start_y = avatar_y + (len(lines) * 15) + 20
             line_height = 30
             
             self.draw_text(f"NOM : {hero.nom}", start_x, start_y)
