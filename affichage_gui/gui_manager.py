@@ -104,3 +104,45 @@ class GuiManager:
 
     def draw_dialog_panel(self, title="DIALOGUE"):
         self.draw_panel(PANEL_DIALOG_X, PANEL_DIALOG_Y, PANEL_DIALOG_W, PANEL_DIALOG_H, title)
+
+    def input_text(self, prompt, x, y, max_length=15):
+        """
+        Affiche un prompt et attend une saisie texte de l'utilisateur.
+        Bloquant jusqu'à ce que Entrée soit pressé.
+        """
+        input_text = ""
+        active = True
+        
+        while active and self.running:
+            events = self.get_events()
+            for event in events:
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_RETURN:
+                        if input_text.strip(): # Valider seulement si non vide
+                            active = False
+                    elif event.key == pygame.K_BACKSPACE:
+                        input_text = input_text[:-1]
+                    else:
+                        if len(input_text) < max_length and event.unicode.isprintable():
+                            input_text += event.unicode
+            
+            # Redessiner (on doit redessiner tout l'écran pour éviter les artefacts)
+            # Note: Idéalement on passerait une callback de dessin pour le fond, 
+            # mais ici on va juste effacer la zone de texte ou redessiner le panneau dialogue
+            # Pour simplifier, on suppose que l'appelant redessine le fond avant d'appeler input_text
+            # MAIS comme c'est une boucle bloquante, on doit gérer le rafraichissement ici.
+            # On va faire simple : on redessine juste un rectangle noir sur la zone de texte
+            
+            # Pour faire propre, on demande à l'appelant de gérer le dessin de fond via une fonction lambda ?
+            # Trop complexe. On va juste redessiner le panneau dialogue ici.
+            
+            self.draw_dialog_panel("SAISIE")
+            self.draw_text(prompt, x, y)
+            
+            # Curseur clignotant
+            cursor = "_" if (pygame.time.get_ticks() // 500) % 2 == 0 else " "
+            self.draw_text(input_text + cursor, x, y + 40, COLOR_HIGHLIGHT)
+            
+            self.update_display()
+            
+        return input_text
