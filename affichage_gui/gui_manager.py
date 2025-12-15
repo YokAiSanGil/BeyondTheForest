@@ -1,0 +1,106 @@
+import pygame
+import sys
+
+# --- CONFIGURATION ---
+SCREEN_WIDTH = 1280
+SCREEN_HEIGHT = 720
+FPS = 60
+
+# Couleurs
+COLOR_BG = (5, 5, 10)
+COLOR_PANEL_BG = (15, 15, 20)
+COLOR_BORDER = (100, 100, 120)
+COLOR_TEXT = (200, 200, 200)
+COLOR_HIGHLIGHT = (255, 215, 0)
+
+# Dimensions
+MARGIN = 20
+SIDEBAR_WIDTH = 300
+PANEL_STATS_X = MARGIN
+PANEL_STATS_Y = MARGIN
+PANEL_STATS_W = SIDEBAR_WIDTH
+PANEL_STATS_H = SCREEN_HEIGHT - (2 * MARGIN)
+PANEL_VIEW_X = PANEL_STATS_X + PANEL_STATS_W + MARGIN
+PANEL_VIEW_Y = MARGIN
+PANEL_VIEW_W = SCREEN_WIDTH - PANEL_VIEW_X - MARGIN
+PANEL_VIEW_H = 400
+PANEL_DIALOG_X = PANEL_VIEW_X
+PANEL_DIALOG_Y = PANEL_VIEW_Y + PANEL_VIEW_H + MARGIN
+PANEL_DIALOG_W = PANEL_VIEW_W
+PANEL_DIALOG_H = SCREEN_HEIGHT - PANEL_DIALOG_Y - MARGIN
+
+class GuiManager:
+    """
+    Gère l'initialisation de Pygame, la fenêtre principale et les fonctions de dessin de base.
+    Singleton partagé par toutes les phases.
+    """
+    _instance = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(GuiManager, cls).__new__(cls)
+            cls._instance.initialized = False
+        return cls._instance
+
+    def init(self):
+        if self.initialized:
+            return
+        pygame.init()
+        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+        pygame.display.set_caption("Heroes vs Monsters - GUI")
+        self.clock = pygame.time.Clock()
+        self.font = pygame.font.SysFont("Courier New", 20, bold=True)
+        self.title_font = pygame.font.SysFont("Courier New", 40, bold=True)
+        self.dither_surface = self._create_dither_surface()
+        self.running = True
+        self.initialized = True
+
+    def _create_dither_surface(self):
+        surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
+        for y in range(0, SCREEN_HEIGHT, 2):
+            pygame.draw.line(surface, (0, 0, 0, 40), (0, y), (SCREEN_WIDTH, y))
+        return surface
+
+    def clear_screen(self):
+        self.screen.fill(COLOR_BG)
+
+    def update_display(self):
+        self.screen.blit(self.dither_surface, (0, 0))
+        pygame.display.flip()
+        self.clock.tick(FPS)
+
+    def draw_panel(self, x, y, w, h, title=None):
+        rect = pygame.Rect(x, y, w, h)
+        pygame.draw.rect(self.screen, COLOR_PANEL_BG, rect, border_radius=15)
+        pygame.draw.rect(self.screen, COLOR_BORDER, rect, 2, border_radius=15)
+        if title:
+            text = self.font.render(title, True, COLOR_BORDER)
+            self.screen.blit(text, (x + 20, y + 15))
+
+    def draw_text(self, text, x, y, color=COLOR_TEXT, font=None, center=False):
+        if font is None: font = self.font
+        surf = font.render(text, True, color)
+        if center:
+            rect = surf.get_rect(center=(x, y))
+            self.screen.blit(surf, rect)
+        else:
+            self.screen.blit(surf, (x, y))
+
+    def get_events(self):
+        events = pygame.event.get()
+        for e in events:
+            if e.type == pygame.QUIT:
+                self.running = False
+                pygame.quit()
+                sys.exit()
+        return events
+
+    # Helpers pour dessiner dans les zones spécifiques
+    def draw_stats_panel(self, title="STATS"):
+        self.draw_panel(PANEL_STATS_X, PANEL_STATS_Y, PANEL_STATS_W, PANEL_STATS_H, title)
+
+    def draw_viewport_panel(self, title="VIEWPORT"):
+        self.draw_panel(PANEL_VIEW_X, PANEL_VIEW_Y, PANEL_VIEW_W, PANEL_VIEW_H, title)
+
+    def draw_dialog_panel(self, title="DIALOGUE"):
+        self.draw_panel(PANEL_DIALOG_X, PANEL_DIALOG_Y, PANEL_DIALOG_W, PANEL_DIALOG_H, title)
