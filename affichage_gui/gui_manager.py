@@ -1,6 +1,7 @@
 import pygame
 import sys
 from affichage.ascii_art import HUMAIN, NAIN
+from affichage_gui.dithering import apply_jarvis_judice_ninke_dithering
 
 # --- CONFIGURATION ---
 SCREEN_WIDTH = 1280
@@ -52,21 +53,18 @@ class GuiManager:
         self.clock = pygame.time.Clock()
         self.font = pygame.font.SysFont("Courier New", 20, bold=True)
         self.title_font = pygame.font.SysFont("Courier New", 40, bold=True)
-        self.dither_surface = self._create_dither_surface()
         self.running = True
         self.initialized = True
-
-    def _create_dither_surface(self):
-        surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
-        for y in range(0, SCREEN_HEIGHT, 2):
-            pygame.draw.line(surface, (0, 0, 0, 40), (0, y), (SCREEN_WIDTH, y))
-        return surface
 
     def clear_screen(self):
         self.screen.fill(COLOR_BG)
 
+    def draw_background_image(self, image):
+        """Dessine une image de fond (déjà ditherée)."""
+        if image:
+            self.screen.blit(image, (0, 0))
+
     def update_display(self):
-        self.screen.blit(self.dither_surface, (0, 0))
         pygame.display.flip()
         self.clock.tick(FPS)
 

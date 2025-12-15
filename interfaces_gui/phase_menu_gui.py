@@ -1,14 +1,30 @@
 import pygame
 import uuid
+import os
 from personnages import Hero
 from affichage_gui.gui_manager import GuiManager, COLOR_HIGHLIGHT, COLOR_TEXT, PANEL_VIEW_X, PANEL_VIEW_Y, PANEL_VIEW_W, PANEL_VIEW_H, PANEL_DIALOG_X, PANEL_DIALOG_Y, SCREEN_WIDTH, SCREEN_HEIGHT
 from affichage.ascii_art import TITLE_SCREEN
+from affichage_gui.dithering import apply_jarvis_judice_ninke_dithering
 from sauvegarde.gestion_sauvegarde import charger_partie, lister_sauvegardes
 
 class PhaseMenuGUI:
     def __init__(self):
         self.gui = GuiManager()
         self.gui.init()
+        
+        # Chargement de l'image de fond
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        img_path = os.path.join(base_dir, "assets", "TitleScreen", "MRTN_A_lush_dark_fantasy_forest_hero_from_behind_going_in_lands_083a31f5-8ae7-4803-a97f-995a5245f382.png")
+        
+        self.title_bg = None
+        if os.path.exists(img_path):
+            try:
+                img = pygame.image.load(img_path).convert()
+                scaled_img = pygame.transform.scale(img, (SCREEN_WIDTH, SCREEN_HEIGHT))
+                # Pré-calcul du dithering pour éviter de le refaire à chaque frame (c'est lent !)
+                self.title_bg = apply_jarvis_judice_ninke_dithering(scaled_img)
+            except Exception as e:
+                print(f"Erreur chargement image titre: {e}")
 
     def creer_hero(self):
         """
@@ -16,6 +32,9 @@ class PhaseMenuGUI:
         """
         # 1. Saisie du Nom
         self.gui.clear_screen()
+        # Image de fond
+        self.gui.draw_background_image(self.title_bg)
+            
         self.gui.draw_stats_panel("NOUVEAU HEROS")
         self.gui.draw_viewport_panel("CREATION")
         
@@ -42,6 +61,9 @@ class PhaseMenuGUI:
                         race_choisie = options_race[selection][1]
 
             self.gui.clear_screen()
+            # Image de fond
+            self.gui.draw_background_image(self.title_bg)
+                
             self.gui.draw_stats_panel(nom.upper())
             self.gui.draw_viewport_panel("CHOIX DE LA RACE")
             self.gui.draw_dialog_panel("SELECTION")
@@ -79,19 +101,16 @@ class PhaseMenuGUI:
             
             self.gui.clear_screen()
             
-            # Dessiner le titre ASCII
-            lines = TITLE_SCREEN.strip().split('\n')
-            start_y = 50
-            for i, line in enumerate(lines):
-                # Centrage horizontal manuel (approx)
-                text_w = len(line) * 10 
-                x = (SCREEN_WIDTH - text_w) // 2
-                self.gui.draw_text(line, x, start_y + i * 15, COLOR_HIGHLIGHT)
+            # Image de fond
+            self.gui.draw_background_image(self.title_bg)
+            
+            # Titre du jeu (Texte à droite)
+            self.gui.draw_text("BEYOND BLACK FOREST", SCREEN_WIDTH - 400, 100, COLOR_HIGHLIGHT, font=self.gui.title_font, center=True)
             
             # Clignotement "PRESS ENTER"
             blink_timer += 1
             if (blink_timer // 30) % 2 == 0:
-                self.gui.draw_text("PRESS ENTER", SCREEN_WIDTH // 2, SCREEN_HEIGHT - 150, center=True)
+                self.gui.draw_text("PRESS ENTER", SCREEN_WIDTH - 400, SCREEN_HEIGHT - 150, center=True)
                 
             self.gui.update_display()
             
@@ -126,20 +145,19 @@ class PhaseMenuGUI:
             # Draw
             self.gui.clear_screen()
             
-            # Redessiner le titre (statique, plus sombre)
-            lines = TITLE_SCREEN.strip().split('\n')
-            start_y = 50
-            for i, line in enumerate(lines):
-                text_w = len(line) * 10
-                x = (SCREEN_WIDTH - text_w) // 2
-                self.gui.draw_text(line, x, start_y + i * 15, (80, 80, 100))
+            # Image de fond
+            self.gui.draw_background_image(self.title_bg)
+            
+            # Titre du jeu (Texte à droite)
+            self.gui.draw_text("BEYOND BLACK FOREST", SCREEN_WIDTH - 400, 100, COLOR_HIGHLIGHT, font=self.gui.title_font, center=True)
 
-            # Menu à la place de "Press Enter"
-            menu_y = SCREEN_HEIGHT - 200
+            # Menu à droite
+            menu_x = SCREEN_WIDTH - 400
+            menu_y = SCREEN_HEIGHT // 2
             for i, (label, _) in enumerate(options):
                 color = COLOR_HIGHLIGHT if i == selection else COLOR_TEXT
                 prefix = "► " if i == selection else "  "
-                self.gui.draw_text(f"{prefix}{label}", SCREEN_WIDTH // 2 - 100, menu_y + i * 40, color)
+                self.gui.draw_text(f"{prefix}{label}", menu_x, menu_y + i * 50, color, center=True)
 
             self.gui.update_display()
             
@@ -150,16 +168,10 @@ class PhaseMenuGUI:
         if not saves:
             # Afficher message "Pas de sauvegarde"
             self.gui.clear_screen()
+            self.gui.draw_background_image(self.title_bg)
             
-            # Redessiner le titre (statique, plus sombre)
-            lines = TITLE_SCREEN.strip().split('\n')
-            start_y = 50
-            for i, line in enumerate(lines):
-                text_w = len(line) * 10
-                x = (SCREEN_WIDTH - text_w) // 2
-                self.gui.draw_text(line, x, start_y + i * 15, (80, 80, 100))
-
-            self.gui.draw_text("AUCUNE SAUVEGARDE TROUVEE", SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 50, (255, 50, 50), center=True)
+            self.gui.draw_text("BEYOND BLACK FOREST", SCREEN_WIDTH - 400, 100, COLOR_HIGHLIGHT, font=self.gui.title_font, center=True)
+            self.gui.draw_text("AUCUNE SAUVEGARDE TROUVEE", SCREEN_WIDTH - 400, SCREEN_HEIGHT // 2, (255, 50, 50), center=True)
             self.gui.update_display()
             pygame.time.wait(1500)
             return None
@@ -167,8 +179,11 @@ class PhaseMenuGUI:
         # Préparer les options : liste des sauvegardes + Retour
         options = []
         for s in saves:
-            options.append((f"{s['nom']}", s['id']))
-        options.append(("RETOUR", None))
+            # Si l'ID est None (vieille sauvegarde), on utilise le nom comme identifiant
+            identifiant = s['id'] if s['id'] is not None else s['nom']
+            options.append((f"{s['nom']}", identifiant))
+        
+        options.append(("RETOUR", "___RETOUR___"))
         
         selection = 0
         
@@ -182,7 +197,7 @@ class PhaseMenuGUI:
                         selection = (selection + 1) % len(options)
                     elif event.key == pygame.K_RETURN:
                         choix_id = options[selection][1]
-                        if choix_id is None:
+                        if choix_id == "___RETOUR___":
                             return None # Retour
                         else:
                             hero, _ = charger_partie(choix_id)
@@ -193,22 +208,21 @@ class PhaseMenuGUI:
             # Draw
             self.gui.clear_screen()
             
-            # Redessiner le titre (statique, plus sombre)
-            lines = TITLE_SCREEN.strip().split('\n')
-            start_y = 50
-            for i, line in enumerate(lines):
-                text_w = len(line) * 10
-                x = (SCREEN_WIDTH - text_w) // 2
-                self.gui.draw_text(line, x, start_y + i * 15, (80, 80, 100))
+            # Image de fond
+            self.gui.draw_background_image(self.title_bg)
+            
+            # Titre du jeu (Texte à droite)
+            self.gui.draw_text("BEYOND BLACK FOREST", SCREEN_WIDTH - 400, 100, COLOR_HIGHLIGHT, font=self.gui.title_font, center=True)
 
-            self.gui.draw_text("CHOISIR UNE SAUVEGARDE", SCREEN_WIDTH // 2, SCREEN_HEIGHT - 250, COLOR_TEXT, center=True)
+            self.gui.draw_text("CHOISIR UNE SAUVEGARDE", SCREEN_WIDTH - 400, SCREEN_HEIGHT // 2 - 50, COLOR_TEXT, center=True)
 
-            # Menu list centered
-            menu_y = SCREEN_HEIGHT - 200
+            # Menu list centered on the right
+            menu_x = SCREEN_WIDTH - 400
+            menu_y = SCREEN_HEIGHT // 2
             for i, (label, _) in enumerate(options):
                 color = COLOR_HIGHLIGHT if i == selection else COLOR_TEXT
                 prefix = "► " if i == selection else "  "
-                self.gui.draw_text(f"{prefix}{label}", SCREEN_WIDTH // 2 - 100, menu_y + i * 40, color)
+                self.gui.draw_text(f"{prefix}{label}", menu_x, menu_y + i * 40, color, center=True)
                 
             self.gui.update_display()
             
