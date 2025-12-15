@@ -1,12 +1,13 @@
 [
     {
         "hero": {
+            "id": "2d17c830-77cd-40cd-9b75-e0f018be881b",
             "nom": "Patrick Sebatsien",
             "race": "Humain",
             "points_de_vie": 15,
             "points_de_vie_max": 15,
-            "gold": 0,
-            "cuir": 0,
+            "gold": 6,
+            "cuir": 4,
             "morts": 0
         },
         "monstres_vaincus": 0
