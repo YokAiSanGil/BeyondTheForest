@@ -1,0 +1,39 @@
+[
+    {
+        "hero": {
+            "nom": "Patrick Sebatsien",
+            "race": "Humain",
+            "points_de_vie": 15,
+            "points_de_vie_max": 15,
+            "gold": 0,
+            "cuir": 0,
+            "morts": 0
+        },
+        "monstres_vaincus": 0
+    },
+    {
+        "hero": {
+            "nom": "san",
+            "race": "Nain",
+            "points_de_vie": 13,
+            "points_de_vie_max": 13,
+            "gold": 0,
+            "cuir": 0,
+            "morts": 0
+        },
+        "monstres_vaincus": 0
+    },
+    {
+        "hero": {
+            "id": "e9a51323-d9ad-4017-9341-07677b2cbdb8",
+            "nom": "San",
+            "race": "Humain",
+            "points_de_vie": 15,
+            "points_de_vie_max": 15,
+            "gold": 0,
+            "cuir": 0,
+            "morts": 0
+        },
+        "monstres_vaincus": 0
+    }
+]
