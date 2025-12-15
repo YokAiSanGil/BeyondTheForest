@@ -96,8 +96,42 @@ class GuiManager:
         return events
 
     # Helpers pour dessiner dans les zones spécifiques
-    def draw_stats_panel(self, title="STATS"):
+    def draw_stats_panel(self, title="STATS", hero=None):
         self.draw_panel(PANEL_STATS_X, PANEL_STATS_Y, PANEL_STATS_W, PANEL_STATS_H, title)
+        
+        if hero:
+            # Affichage des stats du héros
+            start_x = PANEL_STATS_X + 20
+            start_y = PANEL_STATS_Y + 50
+            line_height = 30
+            
+            self.draw_text(f"NOM : {hero.nom}", start_x, start_y)
+            self.draw_text(f"RACE: {hero.race}", start_x, start_y + line_height)
+            
+            # Barre de vie
+            pv_y = start_y + line_height * 2
+            self.draw_text(f"PV  : {hero.points_de_vie}/{hero.points_de_vie_max}", start_x, pv_y)
+            
+            # Dessin de la barre
+            bar_w = PANEL_STATS_W - 40
+            bar_h = 15
+            bar_y = pv_y + 25
+            
+            # Fond barre (rouge sombre)
+            pygame.draw.rect(self.screen, (50, 0, 0), (start_x, bar_y, bar_w, bar_h))
+            # Vie actuelle (rouge vif)
+            ratio = max(0, hero.points_de_vie / hero.points_de_vie_max)
+            pygame.draw.rect(self.screen, (200, 20, 20), (start_x, bar_y, bar_w * ratio, bar_h))
+            
+            # Stats
+            stats_y = bar_y + 30
+            self.draw_text(f"FORCE: {hero.force}", start_x, stats_y)
+            self.draw_text(f"ENDU : {hero.endurance}", start_x, stats_y + line_height)
+            
+            # Or et Cuir
+            res_y = stats_y + line_height * 2 + 10
+            self.draw_text(f"OR   : {hero.gold}", start_x, res_y, COLOR_HIGHLIGHT)
+            self.draw_text(f"CUIR : {hero.cuir}", start_x, res_y + line_height)
 
     def draw_viewport_panel(self, title="VIEWPORT"):
         self.draw_panel(PANEL_VIEW_X, PANEL_VIEW_Y, PANEL_VIEW_W, PANEL_VIEW_H, title)
