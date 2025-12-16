@@ -1,6 +1,7 @@
 import pygame
 import time
 from affichage_gui.gui_manager import GuiManager, COLOR_HIGHLIGHT, COLOR_TEXT, PANEL_VIEW_X, PANEL_VIEW_Y, PANEL_VIEW_W, PANEL_VIEW_H, PANEL_DIALOG_X, PANEL_DIALOG_Y, PANEL_DIALOG_W
+from affichage_gui.dithering import apply_jarvis_judice_ninke_dithering
 from utils.de6faces import De
 from personnages import frapper, fuir, depecer
 from affichage.ascii_art import WOLF, ORC, DRAGONNET
@@ -12,6 +13,7 @@ class PhaseCombatGUI:
         self.gui.init()
         self.hero = None
         self.monstre = None
+        self.monster_surface = None
         self.combat_log = []
 
     def afficher(self, hero, monstre):
@@ -22,6 +24,22 @@ class PhaseCombatGUI:
         self.hero = hero
         self.monstre = monstre
         self.combat_log = [f"Un {monstre.race} sauvage apparaît !"]
+        
+        # Chargement et traitement de l'image du monstre
+        self.monster_surface = None
+        try:
+            if hasattr(monstre, 'image_path'):
+                img = pygame.image.load(monstre.image_path).convert()
+                # Redimensionner pour tenir dans le viewport (max 350x350)
+                max_size = 350
+                scale = min(max_size / img.get_width(), max_size / img.get_height())
+                if scale < 1:
+                    new_size = (int(img.get_width() * scale), int(img.get_height() * scale))
+                    img = pygame.transform.scale(img, new_size)
+                
+                self.monster_surface = apply_jarvis_judice_ninke_dithering(img)
+        except Exception as e:
+            print(f"Erreur chargement image monstre: {e}")
         
         options = [("ATTAQUER", "attaquer"), ("FUIR", "fuir")]
         selection = 0
@@ -115,36 +133,18 @@ class PhaseCombatGUI:
         cx = PANEL_VIEW_X + PANEL_VIEW_W // 2
         cy = PANEL_VIEW_Y + PANEL_VIEW_H // 2
         
-        # Choix de l'ASCII Art
-        art = None
-        race = self.monstre.race.lower()
-        if "loup" in race:
-            art = WOLF
-        elif "orque" in race:
-            art = ORC
-        elif "dragon" in race:
-            art = DRAGONNET
-            
-        if art:
-            lines = art.strip().split('\n')
-            start_y = cy - (len(lines) * 10) # Centrage vertical approximatif
-            for i, line in enumerate(lines):
-                # Centrage horizontal approximatif (chaque char ~10px)
-                text_w = len(line) * 10 
-                x = cx - text_w // 2
-                self.gui.draw_text(line, x, start_y + i * 20, (200, 200, 200))
+        if self.monster_surface:
+            rect = self.monster_surface.get_rect(center=(cx, cy - 20))
+            self.gui.screen.blit(self.monster_surface, rect)
         else:
-            # Fallback si pas d'art
-            rect_monstre = pygame.Rect(0, 0, 100, 100)
-            rect_monstre.center = (cx, cy)
-            pygame.draw.rect(self.gui.screen, (200, 50, 50), rect_monstre)
-            self.gui.draw_text(f"{self.monstre.race}", cx - 40, cy - 70, (255, 100, 100))
+            # Fallback text
+            self.gui.draw_text(f"{self.monstre.race}", cx, cy - 20, (255, 100, 100), center=True)
         
         # Barre de vie du monstre
         width_bar = 150
         height_bar = 10
         x_bar = cx - width_bar // 2
-        y_bar = cy + 100 # Un peu plus bas que l'art
+        y_bar = cy + 160 # Sous l'image
         
         ratio = max(0, self.monstre.points_de_vie / self.monstre.points_de_vie_max)
         pygame.draw.rect(self.gui.screen, (50, 0, 0), (x_bar, y_bar, width_bar, height_bar))

@@ -6,8 +6,8 @@
             "race": "Humain",
             "points_de_vie": 15,
             "points_de_vie_max": 15,
-            "gold": 6,
-            "cuir": 4,
+            "gold": 11,
+            "cuir": 8,
             "morts": 0
         },
         "monstres_vaincus": 0
@@ -20,6 +20,19 @@
             "points_de_vie_max": 13,
             "gold": 0,
             "cuir": 0,
+            "morts": 0
+        },
+        "monstres_vaincus": 0
+    },
+    {
+        "hero": {
+            "id": "93cee14f-440a-48c7-9fa2-eb47f5daee3e",
+            "nom": "deps",
+            "race": "Humain",
+            "points_de_vie": 15,
+            "points_de_vie_max": 15,
+            "gold": 4,
+            "cuir": 4,
             "morts": 0
         },
         "monstres_vaincus": 0

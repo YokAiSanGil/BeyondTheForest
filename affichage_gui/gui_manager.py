@@ -10,9 +10,9 @@ FPS = 60
 
 # Couleurs
 COLOR_BG = (5, 5, 10)
-COLOR_PANEL_BG = (15, 15, 20)
-COLOR_BORDER = (100, 100, 120)
-COLOR_TEXT = (200, 200, 200)
+COLOR_PANEL_BG = (0, 0, 0, 180)  # Noir semi-transparent
+COLOR_BORDER = (255, 255, 255)
+COLOR_TEXT = (255, 255, 255)
 COLOR_HIGHLIGHT = (255, 215, 0)
 
 # Dimensions
@@ -53,8 +53,15 @@ class GuiManager:
         self.clock = pygame.time.Clock()
         self.font = pygame.font.SysFont("Courier New", 20, bold=True)
         self.title_font = pygame.font.SysFont("Courier New", 40, bold=True)
+        self.scanline_surface = self._create_scanlines()
         self.running = True
         self.initialized = True
+
+    def _create_scanlines(self):
+        surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
+        for y in range(0, SCREEN_HEIGHT, 2):
+            pygame.draw.line(surface, (0, 0, 0, 30), (0, y), (SCREEN_WIDTH, y), 1)
+        return surface
 
     def clear_screen(self):
         self.screen.fill(COLOR_BG)
@@ -65,15 +72,22 @@ class GuiManager:
             self.screen.blit(image, (0, 0))
 
     def update_display(self):
+        self.screen.blit(self.scanline_surface, (0, 0))
         pygame.display.flip()
         self.clock.tick(FPS)
 
     def draw_panel(self, x, y, w, h, title=None):
         rect = pygame.Rect(x, y, w, h)
         pygame.draw.rect(self.screen, COLOR_PANEL_BG, rect, border_radius=15)
-        pygame.draw.rect(self.screen, COLOR_BORDER, rect, 2, border_radius=15)
+        
+        # CRT Flicker effect
+        import random
+        val = random.randint(200, 255)
+        flicker_color = (val, val, val)
+        
+        pygame.draw.rect(self.screen, flicker_color, rect, 2, border_radius=15)
         if title:
-            text = self.font.render(title, True, COLOR_BORDER)
+            text = self.font.render(title, True, flicker_color)
             self.screen.blit(text, (x + 20, y + 15))
 
     def draw_text(self, text, x, y, color=COLOR_TEXT, font=None, center=False):
