@@ -1,5 +1,6 @@
 import pygame
 from affichage_gui.gui_manager import COLOR_HIGHLIGHT, COLOR_TEXT, SCREEN_WIDTH, SCREEN_HEIGHT
+from affichage_gui.config import GameConfig
 
 class TitleScreen:
     def __init__(self, gui, assets, save_load_menu):
@@ -57,6 +58,7 @@ class TitleScreen:
         options = [
             ("NOUVEAU JEU", "nouveau"),
             ("CONTINUER", "continuer"),
+            ("OPTIONS", "options"),
             ("QUITTER", "quitter")
         ]
         selection = 0
@@ -74,6 +76,8 @@ class TitleScreen:
                             hero = self.save_load_menu.run()
                             if hero:
                                 return "continuer", hero
+                        elif choix == "options":
+                            self._options_menu_loop()
                         else:
                             return choix, None
 
@@ -97,6 +101,72 @@ class TitleScreen:
                 x = SCREEN_WIDTH - text_w - menu_right_margin
                 
                 self.gui.screen.blit(text_surf, (x, menu_y + i * 40))
+
+            self.gui.update_display()
+
+    def _options_menu_loop(self):
+        config = GameConfig()
+        options = ["enable_scanlines", "enable_flicker", "enable_dithering"]
+        labels = {
+            "enable_scanlines": "SCANLINES",
+            "enable_flicker": "FLICKER",
+            "enable_dithering": "DITHERING"
+        }
+        selection = 0
+        
+        in_options = True
+        while in_options and self.gui.running:
+            for event in self.gui.get_events():
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_UP:
+                        selection = (selection - 1) % (len(options) + 1)
+                    elif event.key == pygame.K_DOWN:
+                        selection = (selection + 1) % (len(options) + 1)
+                    elif event.key == pygame.K_RETURN:
+                        if selection == len(options): # RETOUR
+                            in_options = False
+                        else:
+                            config.toggle(options[selection])
+                    elif event.key == pygame.K_ESCAPE:
+                        in_options = False
+
+            self.gui.clear_screen()
+            self.gui.draw_background_image(self.assets.title_bg)
+            
+            # Titre Options
+            self.gui.draw_text("OPTIONS", SCREEN_WIDTH - 200, SCREEN_HEIGHT // 2 + 50, center=True)
+
+            menu_right_margin = 50
+            menu_y = SCREEN_HEIGHT // 2 + 100
+            
+            # Affichage des options
+            for i, opt_key in enumerate(options):
+                is_selected = (i == selection)
+                color = COLOR_HIGHLIGHT if is_selected else COLOR_TEXT
+                prefix = "► " if is_selected else ""
+                
+                state = "ON" if getattr(config, opt_key) else "OFF"
+                label = labels[opt_key]
+                
+                text_str = f"{prefix}{label} : {state}"
+                
+                text_surf = self.gui.font.render(text_str, True, color)
+                text_w = text_surf.get_width()
+                x = SCREEN_WIDTH - text_w - menu_right_margin
+                
+                self.gui.screen.blit(text_surf, (x, menu_y + i * 40))
+            
+            # Bouton Retour
+            i = len(options)
+            is_selected = (i == selection)
+            color = COLOR_HIGHLIGHT if is_selected else COLOR_TEXT
+            prefix = "► " if is_selected else ""
+            text_str = f"{prefix}RETOUR"
+            
+            text_surf = self.gui.font.render(text_str, True, color)
+            text_w = text_surf.get_width()
+            x = SCREEN_WIDTH - text_w - menu_right_margin
+            self.gui.screen.blit(text_surf, (x, menu_y + i * 40))
 
             self.gui.update_display()
             

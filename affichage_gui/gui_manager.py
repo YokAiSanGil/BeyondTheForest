@@ -2,6 +2,7 @@ import pygame
 import sys
 from affichage.ascii_art import HUMAIN, NAIN
 from affichage_gui.effects import create_scanlines, get_flicker_color
+from affichage_gui.config import GameConfig
 
 # --- CONFIGURATION ---
 SCREEN_WIDTH = 1280
@@ -66,7 +67,8 @@ class GuiManager:
             self.screen.blit(image, (0, 0))
 
     def update_display(self):
-        self.screen.blit(self.scanline_surface, (0, 0))
+        if GameConfig().enable_scanlines:
+            self.screen.blit(self.scanline_surface, (0, 0))
         pygame.display.flip()
         self.clock.tick(FPS)
 
@@ -75,7 +77,10 @@ class GuiManager:
         pygame.draw.rect(self.screen, COLOR_PANEL_BG, rect, border_radius=15)
         
         # CRT Flicker effect
-        flicker_color = get_flicker_color()
+        if GameConfig().enable_flicker:
+            flicker_color = get_flicker_color()
+        else:
+            flicker_color = COLOR_BORDER
         
         pygame.draw.rect(self.screen, flicker_color, rect, 2, border_radius=15)
         if title:
