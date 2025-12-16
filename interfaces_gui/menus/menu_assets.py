@@ -1,6 +1,6 @@
 import pygame
 import os
-from affichage_gui.dithering import apply_jarvis_judice_ninke_dithering
+from affichage_gui.effects import apply_jarvis_judice_ninke_dithering
 from affichage_gui.gui_manager import SCREEN_WIDTH, SCREEN_HEIGHT
 
 class MenuAssets:

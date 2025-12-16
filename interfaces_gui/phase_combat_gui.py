@@ -1,7 +1,7 @@
 import pygame
 import time
 from affichage_gui.gui_manager import GuiManager, COLOR_HIGHLIGHT, COLOR_TEXT, PANEL_VIEW_X, PANEL_VIEW_Y, PANEL_VIEW_W, PANEL_VIEW_H, PANEL_DIALOG_X, PANEL_DIALOG_Y, PANEL_DIALOG_W
-from affichage_gui.dithering import apply_jarvis_judice_ninke_dithering
+from affichage_gui.effects import apply_jarvis_judice_ninke_dithering
 from utils.de6faces import De
 from personnages import frapper, fuir, depecer
 from affichage.ascii_art import WOLF, ORC, DRAGONNET

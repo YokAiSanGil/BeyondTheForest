@@ -1,7 +1,7 @@
 import pygame
 import sys
 from affichage.ascii_art import HUMAIN, NAIN
-from affichage_gui.dithering import apply_jarvis_judice_ninke_dithering
+from affichage_gui.effects import create_scanlines, get_flicker_color
 
 # --- CONFIGURATION ---
 SCREEN_WIDTH = 1280
@@ -53,15 +53,9 @@ class GuiManager:
         self.clock = pygame.time.Clock()
         self.font = pygame.font.SysFont("Courier New", 20, bold=True)
         self.title_font = pygame.font.SysFont("Courier New", 40, bold=True)
-        self.scanline_surface = self._create_scanlines()
+        self.scanline_surface = create_scanlines(SCREEN_WIDTH, SCREEN_HEIGHT)
         self.running = True
         self.initialized = True
-
-    def _create_scanlines(self):
-        surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
-        for y in range(0, SCREEN_HEIGHT, 2):
-            pygame.draw.line(surface, (0, 0, 0, 30), (0, y), (SCREEN_WIDTH, y), 1)
-        return surface
 
     def clear_screen(self):
         self.screen.fill(COLOR_BG)
@@ -81,9 +75,7 @@ class GuiManager:
         pygame.draw.rect(self.screen, COLOR_PANEL_BG, rect, border_radius=15)
         
         # CRT Flicker effect
-        import random
-        val = random.randint(200, 255)
-        flicker_color = (val, val, val)
+        flicker_color = get_flicker_color()
         
         pygame.draw.rect(self.screen, flicker_color, rect, 2, border_radius=15)
         if title:
