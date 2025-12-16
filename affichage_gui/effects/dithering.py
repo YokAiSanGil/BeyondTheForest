@@ -1,6 +1,5 @@
 import pygame
 import numpy as np
-from affichage_gui.config import GameConfig
 
 def apply_jarvis_judice_ninke_dithering(image_surface):
     """
@@ -13,9 +12,6 @@ def apply_jarvis_judice_ninke_dithering(image_surface):
     Returns:
         pygame.Surface: Une nouvelle surface en noir et blanc ditherée.
     """
-    if not GameConfig().enable_dithering:
-        return image_surface
-
     # Convertir la surface en tableau numpy (RGB)
     # On s'assure d'avoir du RGB
     width, height = image_surface.get_size()

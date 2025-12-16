@@ -106,11 +106,10 @@ class TitleScreen:
 
     def _options_menu_loop(self):
         config = GameConfig()
-        options = ["enable_scanlines", "enable_flicker", "enable_dithering"]
+        options = ["enable_scanlines", "enable_flicker"]
         labels = {
             "enable_scanlines": "SCANLINES",
-            "enable_flicker": "FLICKER",
-            "enable_dithering": "DITHERING"
+            "enable_flicker": "FLICKER"
         }
         selection = 0
         

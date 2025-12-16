@@ -19,7 +19,6 @@ class GameConfig:
         # Valeurs par défaut
         self.enable_scanlines = True
         self.enable_flicker = True
-        self.enable_dithering = True
         
         self.load()
         self.initialized = True
@@ -27,8 +26,7 @@ class GameConfig:
     def to_dict(self):
         return {
             "enable_scanlines": self.enable_scanlines,
-            "enable_flicker": self.enable_flicker,
-            "enable_dithering": self.enable_dithering
+            "enable_flicker": self.enable_flicker
         }
 
     def save(self):
@@ -47,7 +45,6 @@ class GameConfig:
                 data = json.load(f)
                 self.enable_scanlines = data.get("enable_scanlines", True)
                 self.enable_flicker = data.get("enable_flicker", True)
-                self.enable_dithering = data.get("enable_dithering", True)
         except Exception as e:
             print(f"Erreur chargement settings: {e}")
 
