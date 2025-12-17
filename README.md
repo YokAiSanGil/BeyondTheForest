@@ -1,40 +1,68 @@
-# HeroesVsMonsters
+# BEYOND the FOREST
 
-Un jeu de combat textuel en Python.
+A retro-style RPG adventure game built with Python and Pygame.
+
+## Overview
+
+BEYOND the FOREST invites you to explore the Dark Forest. Create your hero, battle fearsome monsters, and survive as long as you can in this object-oriented programming project brought to life with a nostalgic CRT aesthetic.
+
+## Features
+
+*   **Retro GUI**: A custom graphical interface featuring scanlines, CRT flicker effects, and pixel-art style rendering.
+*   **Character Creation**: Choose your race (Human or Dwarf), name your hero, and roll your stats.
+*   **Exploration**: Wander through the dark forest with dynamic background images and rich atmospheric text events.
+*   **Combat System**: Turn-based battles against BloodFairies, HellParasites, NightScreamers, StingFishes, and StrygMoths.
+*   **Progression**: Gain gold, loot leather, and manage your health.
+*   **Save System**: Auto-save functionality allows you to continue your journey where you left off.
 
 ## Installation
 
-1. Cloner le dépôt :
+1.  **Clone the repository:**
 
-   ```bash
-   git clone https://github.com/YokAiSanGil/HeroesVsMonsters.git
-   cd HeroesVsMonsters
-   ```
+    ```bash
+    git clone https://github.com/YokAiSanGil/HeroesVsMonsters.git
+    cd HeroesVsMonsters
+    ```
 
-2. Installer Python 3.12
-3. Installer les dépendances :
+2.  **Prerequisites:**
+    *   Python 3.12 or higher.
+    *   `pygame` library.
 
-   ```bash
-   pip install pygame
-   ```
+3.  **Install dependencies:**
 
-## Usage
+    ```bash
+    pip install pygame
+    ```
 
-Lancer la partie :
-Lancer la partie :
+## How to Play
+
+Launch the game using the main GUI script:
 
 ```bash
-python _main.py
+python3 main_gui.py
 ```
 
-## Structure du projet
+*   **Controls**: Use the **Arrow Keys** to navigate menus and **Enter** to select options.
+*   **Gameplay**:
+    *   **New Game**: Create a new hero.
+    *   **Continue**: Load your last saved hero.
+    *   **Explore**: Venture into the forest to find events or monsters.
+    *   **Rest**: Heal your wounds (auto-saves the game).
 
-- `personnages/` : classes `Hero`, `Monster`, `actions`
-- `interfaces/` : phases de jeu (`PhaseMenu`, `PhaseExploration`, `PhaseCombat`, `PhaseSoin`)
-- `affichage/` : ASCII art, widgets d'affichage
-- `utils/` : utilitaires, gestion de la musique et des dés
-- `_main.py` : point d'entrée du jeu
+## Project Structure
 
-## Licence
+*   `main_gui.py`: The main entry point for the graphical version of the game.
+*   `affichage_gui/`: Handles the graphical engine, window management, and CRT effects.
+*   `interfaces_gui/`: Contains the logic for different game phases (Menu, Exploration, Combat).
+*   `personnages/`: Core classes for Heroes and Monsters.
+*   `assets/`: Images and sound resources.
+*   `Old_Console_version/`: The original text-based console version of the game.
 
-Ce projet est distribué sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.
+## License
+
+Copyright (c) 2025 YokAiSanGil. All Rights Reserved.
+
+This project is proprietary. Unauthorized copying, modification, distribution, or use of this software, via any medium, is strictly prohibited.
+
+---
+*Developed by YokAiSanGil*
