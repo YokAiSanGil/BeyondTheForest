@@ -11,6 +11,7 @@ BEYOND the FOREST invites you to explore the Dark Forest. Create your hero, batt
 *   **Retro GUI**: A custom graphical interface featuring scanlines, CRT flicker effects, and pixel-art style rendering.
 *   **Character Creation**: Choose your race (Human or Dwarf), name your hero, and roll your stats.
 *   **Exploration**: Wander through the dark forest with dynamic background images and rich atmospheric text events.
+*   **AI NPC Interaction**: Encounter The Hermit, a mysterious entity powered by a local LLM (Gemma) for dynamic roleplay conversations.
 *   **Combat System**: Turn-based battles against BloodFairies, HellParasites, NightScreamers, StingFishes, and StrygMoths.
 *   **Progression**: Gain gold, loot leather, and manage your health.
 *   **Save System**: Auto-save functionality allows you to continue your journey where you left off.
@@ -27,12 +28,18 @@ BEYOND the FOREST invites you to explore the Dark Forest. Create your hero, batt
 2.  **Prerequisites:**
     *   Python 3.12 or higher.
     *   `pygame` library.
+    *   `llama-cpp-python` library.
 
 3.  **Install dependencies:**
 
     ```bash
-    pip install pygame
+    pip install pygame llama-cpp-python
     ```
+
+4.  **Setup AI Model:**
+    *   Create a folder named `models` in the root directory.
+    *   Download the `gemma-3npc-it-q4_k_m.gguf` model.
+    *   Place the file in `models/gemma-3npc-it-q4_k_m.gguf`.
 
 ## How to Play
 
