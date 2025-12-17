@@ -2,6 +2,7 @@ from affichage_gui.gui_manager import GuiManager
 from interfaces_gui.phase_menu_gui import PhaseMenuGUI
 from interfaces_gui.phase_exploration_gui import PhaseExplorationGUI
 from interfaces_gui.phase_combat_gui import PhaseCombatGUI
+from interfaces_gui.phase_npc_gui import PhaseNPCGUI
 
 def main():
     # Initialisation du moteur graphique
@@ -12,6 +13,7 @@ def main():
     phase_menu = PhaseMenuGUI()
     phase_exploration = PhaseExplorationGUI()
     phase_combat = PhaseCombatGUI()
+    phase_npc = PhaseNPCGUI()
 
     # Boucle principale du jeu (Chef d'orchestre)
     while gui.running:
@@ -45,6 +47,24 @@ def main():
                     elif res_combat == "defaite":
                         # Game Over -> Retour menu principal
                         break
+                
+                elif resultat == "npc":
+                    # Lancement de la phase NPC
+                    phase_npc.start()
+                    while gui.running:
+                        # Events
+                        events = gui.get_events()
+                        res_npc = phase_npc.handle_events(events)
+                        
+                        if res_npc == "exploration":
+                            break
+                            
+                        # Update
+                        phase_npc.update()
+                        
+                        # Draw
+                        phase_npc.draw(gui.screen)
+                        gui.update_display()
                         
                 elif resultat == "menu":
                     break # Retour au menu principal

@@ -170,6 +170,11 @@ class PhaseExplorationGUI:
             
             monstre = creer_monstre_aleatoire()
             return "combat", monstre
+        elif jet == 3:
+            # Rencontre avec l'Hermite
+            self.ajouter_log("[?] Une silhouette émerge de la brume...", typewriter=True)
+            pygame.time.wait(500)
+            return "npc"
         else:
             # Changer d'image d'ambiance seulement si on explore sans encombre
             # Et avec une probabilité de 30% pour ne pas changer trop souvent
