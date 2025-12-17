@@ -160,7 +160,9 @@ class PhaseExplorationGUI:
     def explorer(self):
         """Logique d'exploration (copiée/adaptée de phase_exploration.py)"""
         jet = De.lancer()
-        if jet <= 3:
+        
+        # Combat : 2 et 4
+        if jet in [2, 4]:
             self.ajouter_log("[!] Un bruit suspect approche !", typewriter=True)
             # Petit délai pour lire
             pygame.time.wait(500)
@@ -170,11 +172,15 @@ class PhaseExplorationGUI:
             
             monstre = creer_monstre_aleatoire()
             return "combat", monstre
-        elif jet == 3:
+            
+        # Hermite : 6
+        elif jet == 6:
             # Rencontre avec l'Hermite
             self.ajouter_log("[?] Une silhouette émerge de la brume...", typewriter=True)
             pygame.time.wait(500)
             return "npc"
+            
+        # Exploration : 1, 3, 5
         else:
             # Changer d'image d'ambiance seulement si on explore sans encombre
             # Et avec une probabilité de 30% pour ne pas changer trop souvent
