@@ -20,8 +20,8 @@ BEYOND the FOREST invites you to explore the Dark Forest. Create your hero, batt
 1.  **Clone the repository:**
 
     ```bash
-    git clone https://github.com/YokAiSanGil/HeroesVsMonsters.git
-    cd HeroesVsMonsters
+    git clone https://github.com/YokAiSanGil/BeyondTheForest.git
+    cd BeyondTheForest
     ```
 
 2.  **Prerequisites:**
