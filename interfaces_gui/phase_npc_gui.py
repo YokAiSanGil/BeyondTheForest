@@ -1,6 +1,7 @@
 import pygame
 import threading
 import time
+import os
 from affichage_gui.gui_manager import (
     GuiManager, COLOR_TEXT, COLOR_HIGHLIGHT, COLOR_BORDER,
     PANEL_STATS_X, PANEL_STATS_Y, PANEL_STATS_W, PANEL_STATS_H,
@@ -23,6 +24,11 @@ class PhaseNPCGUI:
         # Placeholder for NPC Image
         self.npc_rect = pygame.Rect(PANEL_STATS_X + 20, PANEL_STATS_Y + 20, PANEL_STATS_W - 40, (PANEL_STATS_W - 40) * 16 // 9)
         self.npc_color = (50, 50, 50) # Dark grey placeholder
+        self.npc_image = None
+        self._load_npc_image()
+        
+        # Fade in effect
+        self.fade_alpha = 0
         
         # Threading flags
         self.model_loaded = False
@@ -35,20 +41,39 @@ class PhaseNPCGUI:
         self.cursor_visible = True
         self.last_cursor_toggle = time.time()
 
+    def _load_npc_image(self):
+        try:
+            base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            path = os.path.join(base_dir, "assets", "TheHermit", "hermit.png")
+            if os.path.exists(path):
+                img = pygame.image.load(path).convert_alpha()
+                # Scale to fit npc_rect, keeping aspect ratio or crop? Let's scale to fill
+                self.npc_image = pygame.transform.scale(img, (self.npc_rect.width, self.npc_rect.height))
+            else:
+                print(f"NPC Image not found at {path}")
+        except Exception as e:
+            print(f"Error loading NPC image: {e}")
+
     def start(self):
         """Called when entering the phase"""
         self.state = "LOADING"
         self.chat_history = []
         self.user_input = ""
+        self.fade_alpha = 0
         # Start loading in a separate thread
         thread = threading.Thread(target=self._load_model_task)
         thread.daemon = True
         thread.start()
 
     def _load_model_task(self):
-        load_hermit()
-        self.model_loaded = True
-        self.state = "IDLE"
+        success = load_hermit()
+        if success:
+            self.model_loaded = True
+            self.state = "IDLE"
+        else:
+            self.state = "IDLE" # Allow user to leave even if error
+            self.chat_history.append(("System", "Error: AI Model not found or failed to load."))
+            self.chat_history.append(("System", "Please check 'models/' folder."))
         # Initial greeting from Hermit? Or just silence?
         # self.chat_history.append(("Hermit", "Greetings, mortal..."))
 
@@ -111,19 +136,36 @@ class PhaseNPCGUI:
         return None
 
     def update(self):
+        # Fade in
+        if self.fade_alpha < 255:
+            self.fade_alpha = min(255, self.fade_alpha + 5)
+
         # Cursor blink
         if time.time() - self.last_cursor_toggle > 0.5:
             self.cursor_visible = not self.cursor_visible
             self.last_cursor_toggle = time.time()
 
     def draw(self, screen):
-        self.gui.draw_background()
-        self.gui.draw_scanlines()
+        self.gui.clear_screen()
         
         # 1. Left Panel (NPC Art)
         pygame.draw.rect(screen, COLOR_BORDER, (PANEL_STATS_X, PANEL_STATS_Y, PANEL_STATS_W, PANEL_STATS_H), 1)
-        # Draw placeholder
-        pygame.draw.rect(screen, self.npc_color, self.npc_rect)
+        
+        # Draw NPC Image with fade
+        if self.npc_image:
+            # Create a copy for alpha if needed, or just blit with special flags?
+            # Pygame surfaces with per-pixel alpha (png) don't support set_alpha easily unless we blit to a temp surface
+            # Or we can just use set_alpha if it doesn't have per-pixel alpha.
+            # Assuming convert_alpha() was used.
+            
+            # To fade in a per-pixel alpha image, we need a helper or a temp surface
+            temp_surf = self.npc_image.copy()
+            temp_surf.fill((255, 255, 255, self.fade_alpha), special_flags=pygame.BLEND_RGBA_MULT)
+            screen.blit(temp_surf, self.npc_rect)
+        else:
+            # Draw placeholder
+            pygame.draw.rect(screen, self.npc_color, self.npc_rect)
+            
         pygame.draw.rect(screen, COLOR_BORDER, self.npc_rect, 1)
         
         # Label

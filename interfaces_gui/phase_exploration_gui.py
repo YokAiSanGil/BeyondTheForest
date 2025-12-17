@@ -71,6 +71,8 @@ class PhaseExplorationGUI:
                             result = self.explorer()
                             if isinstance(result, tuple) and result[0] == "combat":
                                 return result
+                            elif result == "npc":
+                                return "npc"
                         elif action == "repos":
                             self.se_reposer()
                         elif action == "menu":
