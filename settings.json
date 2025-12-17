@@ -1,5 +1,4 @@
 {
-    "enable_scanlines": false,
-    "enable_flicker": true,
-    "enable_dithering": true
+    "enable_scanlines": true,
+    "enable_flicker": false
 }

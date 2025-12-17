@@ -1,6 +1,5 @@
 import pygame
 import sys
-from affichage.ascii_art import HUMAIN, NAIN
 from affichage_gui.effects import create_scanlines, get_flicker_color
 from affichage_gui.config import GameConfig
 
@@ -18,17 +17,18 @@ COLOR_HIGHLIGHT = (255, 215, 0)
 
 # Dimensions
 MARGIN = 20
+HEADER_HEIGHT = 30 # Espace pour le titre au-dessus de la fenêtre
 SIDEBAR_WIDTH = 300
 PANEL_STATS_X = MARGIN
-PANEL_STATS_Y = MARGIN
+PANEL_STATS_Y = MARGIN + HEADER_HEIGHT
 PANEL_STATS_W = SIDEBAR_WIDTH
-PANEL_STATS_H = SCREEN_HEIGHT - (2 * MARGIN)
+PANEL_STATS_H = SCREEN_HEIGHT - (2 * MARGIN) - HEADER_HEIGHT
 PANEL_VIEW_X = PANEL_STATS_X + PANEL_STATS_W + MARGIN
-PANEL_VIEW_Y = MARGIN
+PANEL_VIEW_Y = MARGIN + HEADER_HEIGHT
 PANEL_VIEW_W = SCREEN_WIDTH - PANEL_VIEW_X - MARGIN
 PANEL_VIEW_H = 400
 PANEL_DIALOG_X = PANEL_VIEW_X
-PANEL_DIALOG_Y = PANEL_VIEW_Y + PANEL_VIEW_H + MARGIN
+PANEL_DIALOG_Y = PANEL_VIEW_Y + PANEL_VIEW_H + MARGIN + HEADER_HEIGHT
 PANEL_DIALOG_W = PANEL_VIEW_W
 PANEL_DIALOG_H = SCREEN_HEIGHT - PANEL_DIALOG_Y - MARGIN
 
@@ -84,8 +84,9 @@ class GuiManager:
         
         pygame.draw.rect(self.screen, flicker_color, rect, 2, border_radius=15)
         if title:
+            # Titre hors de la fenêtre, au-dessus à gauche
             text = self.font.render(title, True, flicker_color)
-            self.screen.blit(text, (x + 20, y + 15))
+            self.screen.blit(text, (x, y - 25))
 
     def draw_text(self, text, x, y, color=COLOR_TEXT, font=None, center=False):
         if font is None: font = self.font
@@ -110,16 +111,9 @@ class GuiManager:
         self.draw_panel(PANEL_STATS_X, PANEL_STATS_Y, PANEL_STATS_W, PANEL_STATS_H, title)
         
         if hero:
-            # Affichage de l'avatar
-            art = HUMAIN if hero.race == "Humain" else NAIN
-            lines = art.strip().split('\n')
-            avatar_y = PANEL_STATS_Y + 40
-            for i, line in enumerate(lines):
-                self.draw_text(line, PANEL_STATS_X + 20, avatar_y + i * 15, (150, 150, 150))
-
             # Affichage des stats du héros
             start_x = PANEL_STATS_X + 20
-            start_y = avatar_y + (len(lines) * 15) + 20
+            start_y = PANEL_STATS_Y + 40
             line_height = 30
             
             self.draw_text(f"NOM : {hero.nom}", start_x, start_y)
@@ -135,10 +129,10 @@ class GuiManager:
             bar_y = pv_y + 25
             
             # Fond barre (rouge sombre)
-            pygame.draw.rect(self.screen, (50, 0, 0), (start_x, bar_y, bar_w, bar_h))
-            # Vie actuelle (rouge vif)
+            pygame.draw.rect(self.screen, (50, 50, 0), (start_x, bar_y, bar_w, bar_h))
+            # Vie actuelle (Or / Highlight)
             ratio = max(0, hero.points_de_vie / hero.points_de_vie_max)
-            pygame.draw.rect(self.screen, (200, 20, 20), (start_x, bar_y, bar_w * ratio, bar_h))
+            pygame.draw.rect(self.screen, COLOR_HIGHLIGHT, (start_x, bar_y, bar_w * ratio, bar_h))
             
             # Stats
             stats_y = bar_y + 30
@@ -161,6 +155,10 @@ class GuiManager:
         Affiche un prompt et attend une saisie texte de l'utilisateur.
         Bloquant jusqu'à ce que Entrée soit pressé.
         """
+        # Capture de l'arrière-plan actuel (sans scanlines si update_display n'a pas été appelé juste avant)
+        # Cela permet d'éviter l'accumulation des scanlines à chaque frame de la boucle
+        background_snapshot = self.screen.copy()
+        
         input_text = ""
         active = True
         
@@ -177,16 +175,10 @@ class GuiManager:
                         if len(input_text) < max_length and event.unicode.isprintable():
                             input_text += event.unicode
             
-            # Redessiner (on doit redessiner tout l'écran pour éviter les artefacts)
-            # Note: Idéalement on passerait une callback de dessin pour le fond, 
-            # mais ici on va juste effacer la zone de texte ou redessiner le panneau dialogue
-            # Pour simplifier, on suppose que l'appelant redessine le fond avant d'appeler input_text
-            # MAIS comme c'est une boucle bloquante, on doit gérer le rafraichissement ici.
-            # On va faire simple : on redessine juste un rectangle noir sur la zone de texte
+            # 1. Restaurer l'arrière-plan propre (efface la frame précédente)
+            self.screen.blit(background_snapshot, (0, 0))
             
-            # Pour faire propre, on demande à l'appelant de gérer le dessin de fond via une fonction lambda ?
-            # Trop complexe. On va juste redessiner le panneau dialogue ici.
-            
+            # 2. Dessiner le panneau de saisie par-dessus
             self.draw_dialog_panel("SAISIE")
             self.draw_text(prompt, x, y)
             
@@ -194,6 +186,18 @@ class GuiManager:
             cursor = "_" if (pygame.time.get_ticks() // 500) % 2 == 0 else " "
             self.draw_text(input_text + cursor, x, y + 40, COLOR_HIGHLIGHT)
             
+            # 3. Appliquer les scanlines et rafraîchir
             self.update_display()
+            
+        return input_text
+            
+        self.draw_dialog_panel("SAISIE")
+        self.draw_text(prompt, x, y)
+            
+            # Curseur clignotant
+        cursor = "_" if (pygame.time.get_ticks() // 500) % 2 == 0 else " "
+        self.draw_text(input_text + cursor, x, y + 40, COLOR_HIGHLIGHT)
+            
+        self.update_display()
             
         return input_text

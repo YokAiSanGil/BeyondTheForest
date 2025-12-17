@@ -1,10 +1,8 @@
 import pygame
 import time
 from affichage_gui.gui_manager import GuiManager, COLOR_HIGHLIGHT, COLOR_TEXT, PANEL_VIEW_X, PANEL_VIEW_Y, PANEL_VIEW_W, PANEL_VIEW_H, PANEL_DIALOG_X, PANEL_DIALOG_Y, PANEL_DIALOG_W
-from affichage_gui.effects import apply_jarvis_judice_ninke_dithering
 from utils.de6faces import De
 from personnages import frapper, fuir, depecer
-from affichage.ascii_art import WOLF, ORC, DRAGONNET
 from sauvegarde.gestion_sauvegarde import sauvegarder_partie, supprimer_sauvegarde
 
 class PhaseCombatGUI:
@@ -37,7 +35,7 @@ class PhaseCombatGUI:
                     new_size = (int(img.get_width() * scale), int(img.get_height() * scale))
                     img = pygame.transform.scale(img, new_size)
                 
-                self.monster_surface = apply_jarvis_judice_ninke_dithering(img)
+                self.monster_surface = img
         except Exception as e:
             print(f"Erreur chargement image monstre: {e}")
         
@@ -83,7 +81,8 @@ class PhaseCombatGUI:
     def draw_interface(self, selection=0, options=[]):
         self.gui.clear_screen()
         self.gui.draw_stats_panel(hero=self.hero)
-        self.gui.draw_viewport_panel(f"COMBAT VS {self.monstre.race.upper()}")
+        # On retire le titre automatique pour le dessiner nous-même avec la barre de vie
+        self.gui.draw_viewport_panel(None)
         self.gui.draw_dialog_panel("ACTIONS")
 
         self.dessiner_monstre()
@@ -129,28 +128,43 @@ class PhaseCombatGUI:
             self.combat_log.pop(0)
 
     def dessiner_monstre(self):
-        # Centre du viewport
+        # 1. En-tête : Nom + Barre de vie (HORS de la fenêtre, au-dessus)
+        header_y = PANEL_VIEW_Y - 25
+        name_x = PANEL_VIEW_X
+        
+        # Nom du monstre
+        name_text = self.monstre.race.upper()
+        self.gui.draw_text(name_text, name_x, header_y, color=COLOR_TEXT)
+        
+        # Calcul de la position de la barre (à droite du nom)
+        font = self.gui.font
+        name_width = font.size(name_text)[0]
+        
+        bar_x = name_x + name_width + 20
+        bar_y = header_y + 5 # Un peu plus bas pour centrer avec le texte
+        bar_w = 200
+        bar_h = 12
+        
+        # Dessin de la barre de vie
+        ratio = max(0, self.monstre.points_de_vie / self.monstre.points_de_vie_max)
+        # Fond (Sombre)
+        pygame.draw.rect(self.gui.screen, (50, 50, 0), (bar_x, bar_y, bar_w, bar_h))
+        # Vie (Or / Highlight)
+        pygame.draw.rect(self.gui.screen, COLOR_HIGHLIGHT, (bar_x, bar_y, bar_w * ratio, bar_h))
+        # Bordure fine pour la barre
+        pygame.draw.rect(self.gui.screen, (255, 255, 255), (bar_x, bar_y, bar_w, bar_h), 1)
+
+        # 2. Image du Monstre (Centrée dans le reste de l'espace)
         cx = PANEL_VIEW_X + PANEL_VIEW_W // 2
         cy = PANEL_VIEW_Y + PANEL_VIEW_H // 2
         
         if self.monster_surface:
-            rect = self.monster_surface.get_rect(center=(cx, cy - 20))
+            # On centre l'image parfaitement maintenant
+            rect = self.monster_surface.get_rect(center=(cx, cy))
             self.gui.screen.blit(self.monster_surface, rect)
         else:
             # Fallback text
-            self.gui.draw_text(f"{self.monstre.race}", cx, cy - 20, (255, 100, 100), center=True)
-        
-        # Barre de vie du monstre
-        width_bar = 150
-        height_bar = 10
-        x_bar = cx - width_bar // 2
-        y_bar = cy + 160 # Sous l'image
-        
-        ratio = max(0, self.monstre.points_de_vie / self.monstre.points_de_vie_max)
-        pygame.draw.rect(self.gui.screen, (50, 0, 0), (x_bar, y_bar, width_bar, height_bar))
-        pygame.draw.rect(self.gui.screen, (255, 0, 0), (x_bar, y_bar, width_bar * ratio, height_bar))
-        
-        self.gui.draw_text(f"{self.monstre.points_de_vie}/{self.monstre.points_de_vie_max} PV", cx - 30, y_bar + 15, (200, 200, 200))
+            self.gui.draw_text(f"{self.monstre.race}", cx, cy, (255, 100, 100), center=True)
 
     def tour_de_combat(self):
         """Exécute un tour de combat complet (Héros frappe, puis Monstre frappe si vivant)"""

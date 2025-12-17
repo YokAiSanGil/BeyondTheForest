@@ -6,8 +6,8 @@
             "race": "Humain",
             "points_de_vie": 15,
             "points_de_vie_max": 15,
-            "gold": 11,
-            "cuir": 8,
+            "gold": 21,
+            "cuir": 12,
             "morts": 0
         },
         "monstres_vaincus": 0
@@ -33,6 +33,19 @@
             "points_de_vie_max": 15,
             "gold": 4,
             "cuir": 4,
+            "morts": 0
+        },
+        "monstres_vaincus": 0
+    },
+    {
+        "hero": {
+            "id": "cffd8f12-d671-40bb-88f2-31758f87d9b9",
+            "nom": "Axellou",
+            "race": "Nain",
+            "points_de_vie": 3,
+            "points_de_vie_max": 13,
+            "gold": 1,
+            "cuir": 1,
             "morts": 0
         },
         "monstres_vaincus": 0

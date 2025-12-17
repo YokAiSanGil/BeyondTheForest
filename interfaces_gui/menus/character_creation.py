@@ -19,7 +19,7 @@ class CharacterCreation:
         
         self.gui.draw_text("Bienvenue, aventurier.", PANEL_VIEW_X + 20, PANEL_VIEW_Y + 50)
         self.gui.draw_text("Quel est votre nom ?", PANEL_VIEW_X + 20, PANEL_VIEW_Y + 80)
-        self.gui.update_display()
+        # self.gui.update_display() # SUPPRIMÉ : On laisse input_text gérer l'affichage pour éviter de "cuire" les scanlines
         
         nom = self.gui.input_text("Entrez votre nom :", PANEL_DIALOG_X + 40, PANEL_DIALOG_Y + 40)
         

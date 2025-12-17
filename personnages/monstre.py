@@ -20,7 +20,7 @@ class Monster(Personnage):
         # Chemin de l'image
         import os
         base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        self.image_path = os.path.join(base_path, 'assets', 'Mosters', f'{race}.png')
+        self.image_path = os.path.join(base_path, 'assets', 'Mosters', f'{race}_dithered.png')
 
     @property
     def endurance(self):

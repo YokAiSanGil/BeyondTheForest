@@ -1,9 +1,11 @@
 import pygame
 import random
+import os
 from affichage_gui.gui_manager import GuiManager, COLOR_HIGHLIGHT, COLOR_TEXT, PANEL_VIEW_X, PANEL_VIEW_Y, PANEL_VIEW_W, PANEL_VIEW_H, PANEL_DIALOG_X, PANEL_DIALOG_Y, PANEL_DIALOG_W
 from utils.de6faces import De
 from personnages.monstre import creer_monstre_aleatoire
 from sauvegarde.gestion_sauvegarde import sauvegarder_partie
+from interfaces_gui.exploration_events import get_exploration_event
 
 class PhaseExplorationGUI:
     def __init__(self):
@@ -11,15 +13,46 @@ class PhaseExplorationGUI:
         self.gui.init()
         self.hero = None
         self.message_log = ["Vous entrez dans la forêt..."]
+        self.exploration_images = []
+        self.current_image = None
+        self._load_exploration_images()
+
+    def _load_exploration_images(self):
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        img_dir = os.path.join(base_dir, "assets", "Exploration")
+        
+        if os.path.exists(img_dir):
+            for filename in os.listdir(img_dir):
+                if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
+                    try:
+                        path = os.path.join(img_dir, filename)
+                        img = pygame.image.load(path).convert()
+                        # Redimensionner pour le viewport (en gardant un peu de marge si besoin, ou fill)
+                        # On va remplir le viewport : PANEL_VIEW_W - 40, PANEL_VIEW_H - 60
+                        target_w = PANEL_VIEW_W - 40
+                        target_h = PANEL_VIEW_H - 60
+                        img = pygame.transform.scale(img, (target_w, target_h))
+                        self.exploration_images.append(img)
+                    except Exception as e:
+                        print(f"Erreur chargement image exploration {filename}: {e}")
+        
+        if self.exploration_images:
+            self.current_image = random.choice(self.exploration_images)
 
     def reset(self):
         self.message_log = ["Vous entrez dans la forêt..."]
+        if self.exploration_images:
+            self.current_image = random.choice(self.exploration_images)
 
     def afficher(self, hero):
         """
         Boucle principale d'exploration.
         Retourne ("combat", monstre), "menu" ou "quitter".
         """
+        # Nettoyer les événements précédents pour éviter les clics fantômes (ex: Entrée resté enfoncé après combat)
+        pygame.event.clear()
+        pygame.time.wait(200)
+        
         self.hero = hero
         options = [("EXPLORER", "explorer"), ("REPOS", "repos"), ("MENU", "menu")]
         selection = 0
@@ -44,57 +77,110 @@ class PhaseExplorationGUI:
                             return "menu"
 
             # 2. Draw
-            self.gui.clear_screen()
-            self.gui.draw_stats_panel(hero=self.hero)
-            self.gui.draw_viewport_panel("FORET SOMBRE")
-            self.gui.draw_dialog_panel("EXPLORATION")
+            self._draw_interface(selection, options)
+        return "quitter"
 
-            # Viewport : Placeholder Forêt (Un rectangle vert sombre pour l'instant)
-            rect_foret = pygame.Rect(PANEL_VIEW_X + 20, PANEL_VIEW_Y + 40, PANEL_VIEW_W - 40, PANEL_VIEW_H - 60)
+    def ajouter_log(self, message, typewriter=True):
+        """Ajoute un message au log, avec effet typewriter optionnel."""
+        if not typewriter:
+            self.message_log.append(message)
+            if len(self.message_log) > 10:
+                self.message_log.pop(0)
+            return
+
+        # Effet Typewriter
+        full_message = message
+        current_text = ""
+        self.message_log.append("") # Placeholder pour le message en cours
+        
+        # Nettoyer la queue d'événements pour éviter les inputs fantômes
+        pygame.event.clear()
+        
+        skip = False
+        for char in full_message:
+            if skip:
+                current_text += char
+                continue
+                
+            current_text += char
+            self.message_log[-1] = current_text
+            
+            # Redessiner l'interface
+            self._draw_interface()
+            
+            # Gestion du skip (Espace ou Entrée)
+            for event in self.gui.get_events():
+                if event.type == pygame.KEYDOWN:
+                    if event.key in (pygame.K_SPACE, pygame.K_RETURN):
+                        skip = True
+            
+            if not skip:
+                pygame.time.wait(30) # Vitesse de frappe
+        
+        # Finaliser le message
+        self.message_log[-1] = full_message
+        if len(self.message_log) > 10:
+            self.message_log.pop(0)
+            
+    def _draw_interface(self, selection=0, options=None):
+        """Helper pour redessiner l'interface pendant les animations."""
+        if options is None:
+            options = [("EXPLORER", "explorer"), ("REPOS", "repos"), ("MENU", "menu")]
+            
+        self.gui.clear_screen()
+        self.gui.draw_stats_panel(hero=self.hero)
+        self.gui.draw_viewport_panel("FORET SOMBRE")
+        self.gui.draw_dialog_panel("EXPLORATION")
+
+        # Viewport
+        rect_foret = pygame.Rect(PANEL_VIEW_X + 20, PANEL_VIEW_Y + 40, PANEL_VIEW_W - 40, PANEL_VIEW_H - 60)
+        if self.current_image:
+            self.gui.screen.blit(self.current_image, (PANEL_VIEW_X + 20, PANEL_VIEW_Y + 40))
+        else:
             pygame.draw.rect(self.gui.screen, (10, 30, 10), rect_foret)
             self.gui.draw_text("🌲  🌲  🌲", PANEL_VIEW_X + 100, PANEL_VIEW_Y + 150, (50, 100, 50), font=self.gui.title_font)
 
-            # Dialogue : Logs + Menu
-            # Afficher les 3 derniers messages
-            start_log_y = PANEL_DIALOG_Y + 40
-            for i, msg in enumerate(self.message_log[-3:]):
-                self.gui.draw_text(f"> {msg}", PANEL_DIALOG_X + 20, start_log_y + i * 25)
+        # Logs
+        start_log_y = PANEL_DIALOG_Y + 40
+        # On affiche les 3 derniers messages, y compris celui en cours d'écriture
+        msgs_to_show = self.message_log[-3:]
+        for i, msg in enumerate(msgs_to_show):
+            # Utiliser une police plus petite si possible, sinon standard
+            self.gui.draw_text(f"> {msg}", PANEL_DIALOG_X + 20, start_log_y + i * 25)
 
-            # Afficher le menu à droite
-            menu_x = PANEL_DIALOG_X + PANEL_DIALOG_W - 200
-            for i, (label, _) in enumerate(options):
-                color = COLOR_HIGHLIGHT if i == selection else COLOR_TEXT
-                prefix = "► " if i == selection else "  "
-                self.gui.draw_text(f"{prefix}{label}", menu_x, start_log_y + i * 30, color)
+        # Menu
+        menu_x = PANEL_DIALOG_X + PANEL_DIALOG_W - 200
+        for i, (label, _) in enumerate(options):
+            color = COLOR_HIGHLIGHT if i == selection else COLOR_TEXT
+            prefix = "► " if i == selection else "  "
+            self.gui.draw_text(f"{prefix}{label}", menu_x, start_log_y + i * 30, color)
 
-            self.gui.update_display()
-        return "quitter"
-
-    def ajouter_log(self, message):
-        self.message_log.append(message)
-        if len(self.message_log) > 10:
-            self.message_log.pop(0)
+        self.gui.update_display()
 
     def explorer(self):
         """Logique d'exploration (copiée/adaptée de phase_exploration.py)"""
         jet = De.lancer()
-        if jet <= 4:
-            self.ajouter_log("⚠️ Un bruit suspect approche !")
+        if jet <= 3:
+            self.ajouter_log("[!] Un bruit suspect approche !", typewriter=True)
             # Petit délai pour lire
             pygame.time.wait(500)
+            
+            # Attendre que le joueur relâche les touches pour éviter de boucler
+            pygame.event.clear()
+            
             monstre = creer_monstre_aleatoire()
             return "combat", monstre
         else:
-            events = [
-                "Rien à signaler.",
-                "Vous trouvez des traces anciennes.",
-                "Le vent souffle dans les branches.",
-                "Vous trouvez une pièce d'or !"
-            ]
-            msg = random.choice(events)
-            if "or" in msg:
-                self.hero.gold += 1
-            self.ajouter_log(msg)
+            # Changer d'image d'ambiance seulement si on explore sans encombre
+            # Et avec une probabilité de 30% pour ne pas changer trop souvent
+            if self.exploration_images and random.random() < 0.3:
+                self.current_image = random.choice(self.exploration_images)
+                
+            msg, bonus = get_exploration_event(self.hero)
+            if 'gold' in bonus:
+                self.hero.gold += bonus['gold']
+            
+            self.ajouter_log(msg, typewriter=True)
             return "exploration"
 
     def se_reposer(self):
