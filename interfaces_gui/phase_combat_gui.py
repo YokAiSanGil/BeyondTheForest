@@ -2,6 +2,7 @@ import pygame
 import time
 from affichage_gui.gui_manager import GuiManager, COLOR_HIGHLIGHT, COLOR_TEXT, PANEL_VIEW_X, PANEL_VIEW_Y, PANEL_VIEW_W, PANEL_VIEW_H, PANEL_DIALOG_X, PANEL_DIALOG_Y, PANEL_DIALOG_W, PANEL_LOG_X, PANEL_LOG_W
 from utils.de6faces import De
+from interfaces_gui.utils import handle_menu_navigation, load_and_scale_image, typewriter_effect, wait_for_enter
 from personnages import frapper, fuir, depecer
 from sauvegarde.gestion_sauvegarde import sauvegarder_partie, supprimer_sauvegarde
 
@@ -21,23 +22,15 @@ class PhaseCombatGUI:
         """
         self.hero = hero
         self.monstre = monstre
-        self.combat_log = [f"Un {monstre.race} sauvage apparaît !"]
+        self.combat_log = []
         
         # Chargement et traitement de l'image du monstre
         self.monster_surface = None
-        try:
-            if hasattr(monstre, 'image_path'):
-                img = pygame.image.load(monstre.image_path).convert()
-                # Redimensionner pour tenir dans le viewport (max 350x350)
-                max_size = 350
-                scale = min(max_size / img.get_width(), max_size / img.get_height())
-                if scale < 1:
-                    new_size = (int(img.get_width() * scale), int(img.get_height() * scale))
-                    img = pygame.transform.scale(img, new_size)
-                
-                self.monster_surface = img
-        except Exception as e:
-            print(f"Erreur chargement image monstre: {e}")
+        if hasattr(monstre, 'image_path'):
+            self.monster_surface = load_and_scale_image(monstre.image_path, 350, 350)
+        
+        # Intro cinématique bloquante
+        self.typewriter_log(f"Un {monstre.race} sauvage apparaît !", show_menu=False, wait_input=False)
         
         options = [("ATTAQUER", "attaquer"), ("FUIR", "fuir")]
         selection = 0
@@ -47,13 +40,10 @@ class PhaseCombatGUI:
             # 1. Events
             action_choisie = None
             for event in self.gui.get_events():
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_UP:
-                        selection = (selection - 1) % len(options)
-                    elif event.key == pygame.K_DOWN:
-                        selection = (selection + 1) % len(options)
-                    elif event.key == pygame.K_RETURN:
-                        action_choisie = options[selection][1]
+                selection, confirmed = handle_menu_navigation(event, selection, len(options))
+                
+                if confirmed:
+                    action_choisie = options[selection][1]
 
             # 2. Logique du tour (si action choisie)
             if action_choisie:
@@ -78,7 +68,7 @@ class PhaseCombatGUI:
         
         return "quitter"
 
-    def draw_interface(self, selection=0, options=[]):
+    def draw_interface(self, selection=0, options=[], show_menu=True):
         self.gui.clear_screen()
         self.gui.draw_stats_panel(hero=self.hero)
         # On retire le titre automatique pour le dessiner nous-même avec la barre de vie
@@ -88,8 +78,10 @@ class PhaseCombatGUI:
         self.dessiner_monstre()
 
         # Interface du bas unifiée (Mode Standard)
+        display_options = options if show_menu else None
+        
         self.gui.draw_bottom_interface(
-            menu_options=options,
+            menu_options=display_options,
             selected_index=selection,
             logs=self.combat_log,
             input_mode=False,
@@ -98,25 +90,21 @@ class PhaseCombatGUI:
         
         self.gui.update_display()
 
-    def typewriter_log(self, message):
-        self.combat_log.append("")
-        if len(self.combat_log) > 10:
-            self.combat_log.pop(0)
-            
-        for char in message:
-            self.combat_log[-1] += char
-            self.draw_interface() 
-            pygame.time.wait(20) 
+    def typewriter_log(self, message, show_menu=True, wait_input=True):
+        # Utilisation de la fonction centralisée
+        draw_callback = lambda: self.draw_interface(show_menu=show_menu)
         
-        self.attendre_entree()
-
-    def attendre_entree(self):
-        waiting = True
-        while waiting and self.gui.running:
-            for event in self.gui.get_events():
-                if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
-                    waiting = False
-            pygame.time.wait(10)
+        typewriter_effect(
+            self.gui, 
+            self.combat_log, 
+            message, 
+            draw_callback, 
+            speed=20,
+            skippable=True
+        )
+        
+        if wait_input:
+            wait_for_enter(self.gui)
 
     def ajouter_log(self, message):
         self.combat_log.append(message)

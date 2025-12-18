@@ -3,6 +3,7 @@ import random
 import os
 from affichage_gui.gui_manager import GuiManager, COLOR_HIGHLIGHT, COLOR_TEXT, PANEL_VIEW_X, PANEL_VIEW_Y, PANEL_VIEW_W, PANEL_VIEW_H, PANEL_DIALOG_X, PANEL_DIALOG_Y, PANEL_DIALOG_W, PANEL_LOG_X, PANEL_LOG_W
 from utils.de6faces import De
+from interfaces_gui.utils import handle_menu_navigation, load_and_scale_image, typewriter_effect
 from personnages.monstre import creer_monstre_aleatoire
 from sauvegarde.gestion_sauvegarde import sauvegarder_partie
 from interfaces_gui.exploration_events import get_exploration_event
@@ -12,7 +13,8 @@ class PhaseExplorationGUI:
         self.gui = GuiManager()
         self.gui.init()
         self.hero = None
-        self.message_log = ["Vous entrez dans la forêt..."]
+        self.message_log = []
+        self.first_visit = True
         self.exploration_images = []
         self.current_image = None
         self._load_exploration_images()
@@ -21,26 +23,22 @@ class PhaseExplorationGUI:
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         img_dir = os.path.join(base_dir, "assets", "Exploration")
         
+        target_w = PANEL_VIEW_W - 40
+        target_h = PANEL_VIEW_H - 60
+        
         if os.path.exists(img_dir):
             for filename in os.listdir(img_dir):
                 if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
-                    try:
-                        path = os.path.join(img_dir, filename)
-                        img = pygame.image.load(path).convert()
-                        # Redimensionner pour le viewport (en gardant un peu de marge si besoin, ou fill)
-                        # On va remplir le viewport : PANEL_VIEW_W - 40, PANEL_VIEW_H - 60
-                        target_w = PANEL_VIEW_W - 40
-                        target_h = PANEL_VIEW_H - 60
-                        img = pygame.transform.scale(img, (target_w, target_h))
+                    path = os.path.join(img_dir, filename)
+                    img = load_and_scale_image(path, target_w, target_h)
+                    if img:
                         self.exploration_images.append(img)
-                    except Exception as e:
-                        print(f"Erreur chargement image exploration {filename}: {e}")
         
         if self.exploration_images:
             self.current_image = random.choice(self.exploration_images)
 
     def reset(self):
-        self.message_log = ["Vous entrez dans la forêt..."]
+        self.first_visit = True
         if self.exploration_images:
             self.current_image = random.choice(self.exploration_images)
 
@@ -51,38 +49,45 @@ class PhaseExplorationGUI:
         """
         # Nettoyer les événements précédents pour éviter les clics fantômes (ex: Entrée resté enfoncé après combat)
         pygame.event.clear()
-        pygame.time.wait(200)
         
         self.hero = hero
+        
+        # Reset logs and play intro animation
+        self.message_log = []
+        if self.first_visit:
+            msg = "Vous commencez votre exploration..."
+            self.first_visit = False
+        else:
+            msg = "Vous continuez votre exploration..."
+            
+        self.ajouter_log(msg, typewriter=True, show_menu=False, skippable=False)
+        
         options = [("EXPLORER", "explorer"), ("REPOS", "repos"), ("MENU", "menu")]
         selection = 0
         
         while self.gui.running:
             # 1. Events
             for event in self.gui.get_events():
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_UP:
-                        selection = (selection - 1) % len(options)
-                    elif event.key == pygame.K_DOWN:
-                        selection = (selection + 1) % len(options)
-                    elif event.key == pygame.K_RETURN:
-                        action = options[selection][1]
-                        if action == "explorer":
-                            result = self.explorer()
-                            if isinstance(result, tuple) and result[0] == "combat":
-                                return result
-                            elif result == "npc":
-                                return "npc"
-                        elif action == "repos":
-                            self.se_reposer()
-                        elif action == "menu":
-                            return "menu"
+                selection, confirmed = handle_menu_navigation(event, selection, len(options))
+                
+                if confirmed:
+                    action = options[selection][1]
+                    if action == "explorer":
+                        result = self.explorer()
+                        if isinstance(result, tuple) and result[0] == "combat":
+                            return result
+                        elif result == "npc":
+                            return "npc"
+                    elif action == "repos":
+                        self.se_reposer()
+                    elif action == "menu":
+                        return "menu"
 
             # 2. Draw
             self._draw_interface(selection, options)
         return "quitter"
 
-    def ajouter_log(self, message, typewriter=True):
+    def ajouter_log(self, message, typewriter=True, show_menu=True, skippable=True):
         """Ajoute un message au log, avec effet typewriter optionnel."""
         if not typewriter:
             self.message_log.append(message)
@@ -90,41 +95,19 @@ class PhaseExplorationGUI:
                 self.message_log.pop(0)
             return
 
-        # Effet Typewriter
-        full_message = message
-        current_text = ""
-        self.message_log.append("") # Placeholder pour le message en cours
+        # Utilisation de la fonction centralisée
+        # On crée une lambda pour le callback de dessin qui inclut l'argument show_menu
+        draw_callback = lambda: self._draw_interface(show_menu=show_menu)
         
-        # Nettoyer la queue d'événements pour éviter les inputs fantômes
-        pygame.event.clear()
-        
-        skip = False
-        for char in full_message:
-            if skip:
-                current_text += char
-                continue
-                
-            current_text += char
-            self.message_log[-1] = current_text
+        typewriter_effect(
+            self.gui, 
+            self.message_log, 
+            message, 
+            draw_callback, 
+            skippable=skippable
+        )
             
-            # Redessiner l'interface
-            self._draw_interface()
-            
-            # Gestion du skip (Espace ou Entrée)
-            for event in self.gui.get_events():
-                if event.type == pygame.KEYDOWN:
-                    if event.key in (pygame.K_SPACE, pygame.K_RETURN):
-                        skip = True
-            
-            if not skip:
-                pygame.time.wait(30) # Vitesse de frappe
-        
-        # Finaliser le message
-        self.message_log[-1] = full_message
-        if len(self.message_log) > 10:
-            self.message_log.pop(0)
-            
-    def _draw_interface(self, selection=0, options=None):
+    def _draw_interface(self, selection=0, options=None, show_menu=True):
         """Helper pour redessiner l'interface pendant les animations."""
         if options is None:
             options = [("EXPLORER", "explorer"), ("REPOS", "repos"), ("MENU", "menu")]
@@ -143,8 +126,11 @@ class PhaseExplorationGUI:
             self.gui.draw_text("...", PANEL_VIEW_X + 100, PANEL_VIEW_Y + 150, (50, 100, 50), font=self.gui.title_font)
 
         # Interface du bas unifiée (Mode Standard)
+        # Si show_menu est False, on passe None pour les options
+        display_options = options if show_menu else None
+        
         self.gui.draw_bottom_interface(
-            menu_options=options,
+            menu_options=display_options,
             selected_index=selection,
             logs=self.message_log,
             input_mode=False,

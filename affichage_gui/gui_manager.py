@@ -33,7 +33,7 @@ PANEL_DIALOG_W = PANEL_VIEW_W
 PANEL_DIALOG_H = SCREEN_HEIGHT - PANEL_DIALOG_Y - MARGIN
 
 # New constants for split dialog panel
-PANEL_MENU_WIDTH = 300
+PANEL_MENU_WIDTH = 200
 PANEL_LOG_X = PANEL_DIALOG_X + PANEL_MENU_WIDTH + MARGIN
 PANEL_LOG_W = PANEL_DIALOG_W - PANEL_MENU_WIDTH - MARGIN
 
@@ -283,15 +283,4 @@ class GuiManager:
             # 3. Appliquer les scanlines et rafraîchir
             self.update_display()
             
-        return input_text
-            
-        self.draw_dialog_panel("SAISIE")
-        self.draw_text(prompt, x, y)
-            
-            # Curseur clignotant
-        cursor = "_" if (pygame.time.get_ticks() // 500) % 2 == 0 else " "
-        self.draw_text(input_text + cursor, x, y + 40, COLOR_HIGHLIGHT)
-            
-        self.update_display()
-            
-        return input_text
+        return input_text            

@@ -4,6 +4,7 @@ import time
 from personnages.Hermit_NPC.Hermit_Brain import load_hermit, ask_hermit
 from interfaces_gui.npc.chat_manager import ChatManager
 from interfaces_gui.npc.npc_renderer import NPCRenderer
+from interfaces_gui.utils import handle_menu_navigation
 
 class PhaseNPCGUI:
     def __init__(self):
@@ -59,26 +60,27 @@ class PhaseNPCGUI:
             return None
 
         for event in events:
-            if event.type == pygame.KEYDOWN:
-                if self.state == "IDLE":
-                    if event.key == pygame.K_UP:
-                        self.selected_option = (self.selected_option - 1) % len(self.menu_options)
-                    elif event.key == pygame.K_DOWN:
-                        self.selected_option = (self.selected_option + 1) % len(self.menu_options)
-                    elif event.key == pygame.K_RETURN:
-                        if self.menu_options[self.selected_option] == "Talk":
-                            self.state = "INPUT"
-                            self.user_input = ""
-                            pygame.key.start_text_input()
-                        elif self.menu_options[self.selected_option] == "Leave":
-                            return "exploration"
-                    # Scroll controls in IDLE mode
-                    elif event.key == pygame.K_PAGEUP:
-                        self.chat_manager.handle_scroll(20, 1000) # Max scroll is approximate here, will be clamped in draw
+            if self.state == "IDLE":
+                # Navigation standard
+                self.selected_option, confirmed = handle_menu_navigation(event, self.selected_option, len(self.menu_options))
+                
+                if confirmed:
+                    if self.menu_options[self.selected_option] == "Talk":
+                        self.state = "INPUT"
+                        self.user_input = ""
+                        pygame.key.start_text_input()
+                    elif self.menu_options[self.selected_option] == "Leave":
+                        return "exploration"
+                
+                # Scroll controls (spécifique NPC)
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_PAGEUP:
+                        self.chat_manager.handle_scroll(20, 1000)
                     elif event.key == pygame.K_PAGEDOWN:
                         self.chat_manager.handle_scroll(-20, 1000)
                             
-                elif self.state == "INPUT":
+            elif self.state == "INPUT":
+                if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_RETURN:
                         if self.user_input.strip():
                             self.chat_manager.add_message("Player", self.user_input)

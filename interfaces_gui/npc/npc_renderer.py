@@ -5,6 +5,7 @@ from affichage_gui.gui_manager import (
     PANEL_STATS_X, PANEL_STATS_Y, PANEL_STATS_W, PANEL_STATS_H,
     PANEL_VIEW_X, PANEL_VIEW_Y, PANEL_VIEW_W, PANEL_VIEW_H
 )
+from interfaces_gui.utils import load_and_scale_image
 
 class NPCRenderer:
     def __init__(self, font):
@@ -16,20 +17,12 @@ class NPCRenderer:
         self.fade_alpha = 0
 
     def _load_npc_image(self):
-        try:
-            # Assuming this file is in interfaces_gui/npc/
-            # We need to go up 3 levels to get to root: npc -> interfaces_gui -> HeroesVsMonsters
-            base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-            path = os.path.join(base_dir, "assets", "TheHermit", "hermit.png")
-            if os.path.exists(path):
-                img = pygame.image.load(path).convert_alpha()
-                return pygame.transform.scale(img, (self.npc_rect.width, self.npc_rect.height))
-            else:
-                print(f"NPC Image not found at {path}")
-                return None
-        except Exception as e:
-            print(f"Error loading NPC image: {e}")
-            return None
+        # Assuming this file is in interfaces_gui/npc/
+        # We need to go up 3 levels to get to root: npc -> interfaces_gui -> HeroesVsMonsters
+        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        path = os.path.join(base_dir, "assets", "TheHermit", "hermit.png")
+        
+        return load_and_scale_image(path, self.npc_rect.width, self.npc_rect.height)
 
     def update_fade(self):
         if self.fade_alpha < 255:

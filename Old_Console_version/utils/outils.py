@@ -5,7 +5,6 @@ Ce module contient des fonctions utilitaires pour le jeu.
 import os
 import time
 import sys
-import pygame
 
 
 #os.system('cls')
@@ -13,34 +12,6 @@ import pygame
 """
 ####---------------Outils d'interface----------------####
 """
-
-
-def handle_menu_navigation(event, current_selection, num_options):
-    """
-    Gère la navigation standard dans un menu (Haut, Bas, Entrée).
-    
-    Args:
-        event (pygame.event.Event): L'événement à traiter.
-        current_selection (int): L'index de l'option actuellement sélectionnée.
-        num_options (int): Le nombre total d'options dans le menu.
-        
-    Returns:
-        tuple: (nouvelle_selection, est_valide)
-               - nouvelle_selection (int): L'index mis à jour.
-               - est_valide (bool): True si l'utilisateur a appuyé sur Entrée.
-    """
-    new_selection = current_selection
-    is_confirmed = False
-    
-    if event.type == pygame.KEYDOWN:
-        if event.key == pygame.K_UP:
-            new_selection = (current_selection - 1) % num_options
-        elif event.key == pygame.K_DOWN:
-            new_selection = (current_selection + 1) % num_options
-        elif event.key == pygame.K_RETURN:
-            is_confirmed = True
-            
-    return new_selection, is_confirmed
 
 
 def clear_screen():
