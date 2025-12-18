@@ -35,8 +35,8 @@ class SaveLoadMenu:
                         if choix_id == "___RETOUR___":
                             return None
                         else:
-                            hero, _ = charger_partie(choix_id)
-                            return hero
+                            hero, _, npc_memories, world_state = charger_partie(choix_id)
+                            return hero, npc_memories, world_state
                     elif event.key == pygame.K_ESCAPE:
                         return None
 

@@ -28,8 +28,10 @@ class PhaseNPCGUI:
         self.cursor_visible = True
         self.last_cursor_toggle = time.time()
 
-    def start(self):
+    def start(self, npc_memories=None, world_state=None):
         """Called when entering the phase"""
+        self.npc_memories = npc_memories if npc_memories is not None else {}
+        self.world_state = world_state if world_state is not None else {}
         self.state = "LOADING"
         self.chat_manager.history = []
         self.user_input = ""

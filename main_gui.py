@@ -21,22 +21,29 @@ def main():
         choix = resultat_menu[0]
         hero = None
         
+        npc_memories = {}
+        world_state = {}
+
         if choix == "nouveau":
             hero = phase_menu.creer_hero()
         elif choix == "continuer":
-            hero = resultat_menu[1]
+            res = resultat_menu[1]
+            if isinstance(res, tuple):
+                hero, npc_memories, world_state = res
+            else:
+                hero = res
         elif choix == "quitter":
             break
             
         if hero:
-            phase_exploration.reset()
+            phase_exploration.reset(npc_memories, world_state)
             # Lancement de la boucle de jeu
             while gui.running:
                 resultat = phase_exploration.afficher(hero)
                 
                 if isinstance(resultat, tuple) and resultat[0] == "combat":
                     monstre = resultat[1]
-                    res_combat = phase_combat.afficher(hero, monstre)
+                    res_combat = phase_combat.afficher(hero, monstre, npc_memories, world_state)
                     
                     if res_combat == "victoire":
                         # Retour à l'exploration (le loot est déjà géré dans phase_combat)
@@ -50,7 +57,7 @@ def main():
                 
                 elif resultat == "npc":
                     # Lancement de la phase NPC
-                    phase_npc.start()
+                    phase_npc.start(npc_memories, world_state)
                     while gui.running:
                         # Events
                         events = gui.get_events()

@@ -15,13 +15,15 @@ class PhaseCombatGUI:
         self.monster_surface = None
         self.combat_log = []
 
-    def afficher(self, hero, monstre):
+    def afficher(self, hero, monstre, npc_memories=None, world_state=None):
         """
         Boucle principale de combat.
         Retourne "victoire", "defaite" ou "fuite".
         """
         self.hero = hero
         self.monstre = monstre
+        self.npc_memories = npc_memories if npc_memories is not None else {}
+        self.world_state = world_state if world_state is not None else {}
         self.combat_log = []
         
         # Chargement et traitement de l'image du monstre
@@ -171,7 +173,7 @@ class PhaseCombatGUI:
                 self.typewriter_log(msg)
             
             # Sauvegarde auto après victoire
-            sauvegarder_partie(self.hero, 0)
+            sauvegarder_partie(self.hero, 0, self.npc_memories, self.world_state)
             self.typewriter_log("Partie sauvegardée.")
                 
             return "victoire"

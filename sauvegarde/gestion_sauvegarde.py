@@ -1,48 +1,98 @@
 import os
 import json
 import uuid
+import glob
 from personnages.hero import Hero
 
 # Utilisation d'un chemin absolu basé sur l'emplacement du script
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SAUVEGARDE_PATH = os.path.join(BASE_DIR, 'sauvegarde', 'sauvegarde.json')
+SAUVEGARDE_ROOT = os.path.join(BASE_DIR, 'sauvegarde')
+SAUVEGARDE_DIR = os.path.join(SAUVEGARDE_ROOT, 'all_saves')
+LEGACY_SAVE_PATH = os.path.join(SAUVEGARDE_ROOT, 'sauvegarde.json')
 
+def migrer_anciennes_sauvegardes():
+    """
+    Migre les sauvegardes de l'ancien format (sauvegarde.json) vers le nouveau format (fichiers individuels).
+    """
+    if not os.path.exists(LEGACY_SAVE_PATH):
+        return
+
+    print("Migration des sauvegardes en cours...")
+    with open(LEGACY_SAVE_PATH, 'r', encoding='utf-8') as f:
+        try:
+            data = json.load(f)
+        except json.JSONDecodeError:
+            return
+
+    for entry in data:
+        if 'hero' in entry:
+            h_data = entry['hero']
+            # Assurer un ID
+            if not h_data.get('id'):
+                h_data['id'] = str(uuid.uuid4())
+            
+            hero_id = h_data['id']
+            hero_nom = h_data['nom']
+            
+            # Créer la structure complète
+            new_save_data = {
+                'hero': h_data,
+                'monstres_vaincus': entry.get('monstres_vaincus', 0),
+                'npc_memories': {},
+                'world_state': {}
+            }
+            
+            # Sauvegarder dans le nouveau fichier
+            # Nettoyer le nom pour éviter les caractères invalides dans le nom de fichier
+            safe_nom = "".join([c for c in hero_nom if c.isalnum() or c in (' ', '-', '_')]).strip()
+            filename = f"save_{safe_nom}_{hero_id}.json"
+            filepath = os.path.join(SAUVEGARDE_DIR, filename)
+            
+            with open(filepath, 'w', encoding='utf-8') as f_out:
+                json.dump(new_save_data, f_out, indent=4, ensure_ascii=False)
+                
+    # Renommer l'ancien fichier pour éviter de le re-migrer
+    os.rename(LEGACY_SAVE_PATH, LEGACY_SAVE_PATH + ".migrated")
+    print("Migration terminée.")
 
 def lister_sauvegardes() -> list:
     """
     Retourne la liste des sauvegardes sous forme de dictionnaires {'nom': str, 'id': str}.
     """
-    if not os.path.exists(SAUVEGARDE_PATH):
+    # Vérifier migration
+    if os.path.exists(LEGACY_SAVE_PATH):
+        migrer_anciennes_sauvegardes()
+        
+    if not os.path.exists(SAUVEGARDE_DIR):
         return []
-    with open(SAUVEGARDE_PATH, 'r', encoding='utf-8') as f:
-        try:
-            data = json.load(f)
-        except json.JSONDecodeError:
-            return []
-    
+        
+    files = glob.glob(os.path.join(SAUVEGARDE_DIR, "save_*.json"))
     result = []
-    for entry in data:
-        if 'hero' in entry:
-            h_data = entry['hero']
-            # Compatibilité : si pas d'ID, on en génère un temporaire pour l'affichage, 
-            # mais idéalement il faudrait le sauvegarder. Pour l'instant on lit ce qui existe.
-            h_id = h_data.get('id')
-            result.append({'nom': h_data['nom'], 'id': h_id})
+    
+    for filepath in files:
+        try:
+            with open(filepath, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                if 'hero' in data:
+                    result.append({
+                        'nom': data['hero']['nom'],
+                        'id': data['hero']['id']
+                    })
+        except (json.JSONDecodeError, KeyError):
+            continue
+            
     return result
 
-def sauvegarder_partie(hero: Hero, monstres_vaincus: int):
+def sauvegarder_partie(hero: Hero, monstres_vaincus: int, npc_memories: dict = None, world_state: dict = None):
     """
-    Sauvegarde ou met à jour la partie du héros dans un fichier JSON.
-    Utilise l'ID du héros pour l'unicité.
+    Sauvegarde la partie du héros dans un fichier JSON individuel.
     """
-    os.makedirs(os.path.dirname(SAUVEGARDE_PATH), exist_ok=True)
-    saves = []
-    if os.path.exists(SAUVEGARDE_PATH):
-        with open(SAUVEGARDE_PATH, 'r', encoding='utf-8') as f:
-            try:
-                saves = json.load(f)
-            except json.JSONDecodeError:
-                saves = []
+    if npc_memories is None:
+        npc_memories = {}
+    if world_state is None:
+        world_state = {}
+        
+    os.makedirs(SAUVEGARDE_DIR, exist_ok=True)
     
     # Assurer que le héros a un ID
     if hero.id is None:
@@ -60,90 +110,72 @@ def sauvegarder_partie(hero: Hero, monstres_vaincus: int):
         'morts': getattr(hero, 'morts', 0)
     }
 
-    entry = {
+    save_data = {
         'hero': hero_data,
-        'monstres_vaincus': monstres_vaincus
+        'monstres_vaincus': monstres_vaincus,
+        'npc_memories': npc_memories,
+        'world_state': world_state
     }
 
-    # Chercher si une sauvegarde existe déjà pour cet ID
-    found_index = -1
-    for i, save in enumerate(saves):
-        if 'hero' in save:
-            # Vérification par ID (prioritaire)
-            if save['hero'].get('id') == hero.id:
-                found_index = i
-                break
-            # Vérification par nom (pour rétrocompatibilité ou si ID manquant dans save)
-            elif save['hero'].get('id') is None and save['hero'].get('nom') == hero.nom:
-                found_index = i
-                break
-    
-    if found_index != -1:
-        saves[found_index] = entry
-    else:
-        saves.append(entry)
+    safe_nom = "".join([c for c in hero.nom if c.isalnum() or c in (' ', '-', '_')]).strip()
+    filename = f"save_{safe_nom}_{hero.id}.json"
+    filepath = os.path.join(SAUVEGARDE_DIR, filename)
 
-    with open(SAUVEGARDE_PATH, 'w', encoding='utf-8') as f:
-        json.dump(saves, f, indent=4, ensure_ascii=False)
-
-def charger_sauvegardes():
-    """
-    Charge toutes les sauvegardes brutes.
-    """
-    if not os.path.exists(SAUVEGARDE_PATH):
-        return []
-    with open(SAUVEGARDE_PATH, 'r', encoding='utf-8') as f:
-        try:
-            return json.load(f)
-        except json.JSONDecodeError:
-            return []
+    with open(filepath, 'w', encoding='utf-8') as f:
+        json.dump(save_data, f, indent=4, ensure_ascii=False)
 
 def charger_partie(identifiant: str) -> tuple:
     """
-    Charge la partie d'un héros par son ID (ou nom pour rétrocompatibilité).
-    Retourne (Hero, monstres_vaincus) ou (None, 0).
+    Charge la partie d'un héros par son ID.
+    Retourne (Hero, monstres_vaincus, npc_memories, world_state).
     """
-    saves = charger_sauvegardes()
-    for entry in saves:
-        hd = entry.get('hero', {})
-        # On cherche par ID si présent, sinon par nom
-        if hd.get('id') == identifiant or (hd.get('id') is None and hd.get('nom') == identifiant):
-            # Créer le héros
-            hero = Hero(nom=hd['nom'], race=hd['race'])
-            hero.id = hd.get('id') # Récupérer l'ID sauvegardé
-            hero.points_de_vie_max = hd['points_de_vie_max']
-            hero.points_de_vie = hd['points_de_vie']
-            hero.gold = hd['gold']
-            hero.cuir = hd['cuir']
-            hero.morts = hd.get('morts', 0)
+    # Vérifier migration
+    if os.path.exists(LEGACY_SAVE_PATH):
+        migrer_anciennes_sauvegardes()
+        
+    files = glob.glob(os.path.join(SAUVEGARDE_DIR, "save_*.json"))
+    
+    for filepath in files:
+        try:
+            with open(filepath, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                
+            if 'hero' in data and data['hero'].get('id') == identifiant:
+                hd = data['hero']
+                hero = Hero(nom=hd['nom'], race=hd['race'])
+                hero.id = hd.get('id')
+                hero.points_de_vie_max = hd['points_de_vie_max']
+                hero.points_de_vie = hd['points_de_vie']
+                hero.gold = hd['gold']
+                hero.cuir = hd['cuir']
+                hero.morts = hd.get('morts', 0)
+                
+                monstres_vaincus = data.get('monstres_vaincus', 0)
+                npc_memories = data.get('npc_memories', {})
+                world_state = data.get('world_state', {})
+                
+                return hero, monstres_vaincus, npc_memories, world_state
+                
+        except (json.JSONDecodeError, KeyError):
+            continue
             
-            # Si on a chargé par nom et qu'il n'y avait pas d'ID, on peut en générer un maintenant
-            # ou attendre la prochaine sauvegarde.
-            if hero.id is None:
-                 hero.id = str(uuid.uuid4())
-
-            return hero, entry.get('monstres_vaincus', 0)
-    return None, 0
+    return None, 0, {}, {}
 
 def supprimer_sauvegarde(hero_id: str):
     """
     Supprime la sauvegarde correspondant à l'ID du héros.
     """
-    if not os.path.exists(SAUVEGARDE_PATH):
-        return
-
-    saves = charger_sauvegardes()
-    new_saves = []
-    found = False
+    files = glob.glob(os.path.join(SAUVEGARDE_DIR, "save_*.json"))
     
-    for save in saves:
-        if 'hero' in save and save['hero'].get('id') == hero_id:
-            found = True
-            continue # On saute cette sauvegarde
-        new_saves.append(save)
-    
-    if found:
-        with open(SAUVEGARDE_PATH, 'w', encoding='utf-8') as f:
-            json.dump(new_saves, f, indent=4, ensure_ascii=False)
+    for filepath in files:
+        try:
+            with open(filepath, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            
+            if 'hero' in data and data['hero'].get('id') == hero_id:
+                os.remove(filepath)
+                return
+        except:
+            continue
 
 

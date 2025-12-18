@@ -17,6 +17,8 @@ class PhaseExplorationGUI:
         self.first_visit = True
         self.exploration_images = []
         self.current_image = None
+        self.npc_memories = {}
+        self.world_state = {}
         self._load_exploration_images()
 
     def _load_exploration_images(self):
@@ -38,10 +40,12 @@ class PhaseExplorationGUI:
         if self.exploration_images:
             self.current_image = random.choice(self.exploration_images)
 
-    def reset(self):
+    def reset(self, npc_memories=None, world_state=None):
         self.first_visit = True
         if self.exploration_images:
             self.current_image = random.choice(self.exploration_images)
+        self.npc_memories = npc_memories if npc_memories is not None else {}
+        self.world_state = world_state if world_state is not None else {}
 
     def afficher(self, hero):
         """
@@ -182,9 +186,9 @@ class PhaseExplorationGUI:
             soin = self.hero.points_de_vie_max // 2
             self.hero.points_de_vie = min(self.hero.points_de_vie + soin, self.hero.points_de_vie_max)
             self.ajouter_log(f"Vous vous reposez (+{soin} PV).")
-            sauvegarder_partie(self.hero, 0) # Sauvegarde auto
+            sauvegarder_partie(self.hero, 0, self.npc_memories, self.world_state) # Sauvegarde auto
             self.ajouter_log("Partie sauvegardée.")
         else:
             self.ajouter_log("Vous êtes déjà en pleine forme.")
-            sauvegarder_partie(self.hero, 0) # Sauvegarde auto même si pas de soin
+            sauvegarder_partie(self.hero, 0, self.npc_memories, self.world_state) # Sauvegarde auto même si pas de soin
             self.ajouter_log("Partie sauvegardée.")
