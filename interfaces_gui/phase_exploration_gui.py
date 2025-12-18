@@ -1,7 +1,7 @@
 import pygame
 import random
 import os
-from affichage_gui.gui_manager import GuiManager, COLOR_HIGHLIGHT, COLOR_TEXT, PANEL_VIEW_X, PANEL_VIEW_Y, PANEL_VIEW_W, PANEL_VIEW_H, PANEL_DIALOG_X, PANEL_DIALOG_Y, PANEL_DIALOG_W
+from affichage_gui.gui_manager import GuiManager, COLOR_HIGHLIGHT, COLOR_TEXT, PANEL_VIEW_X, PANEL_VIEW_Y, PANEL_VIEW_W, PANEL_VIEW_H, PANEL_DIALOG_X, PANEL_DIALOG_Y, PANEL_DIALOG_W, PANEL_LOG_X, PANEL_LOG_W
 from utils.de6faces import De
 from personnages.monstre import creer_monstre_aleatoire
 from sauvegarde.gestion_sauvegarde import sauvegarder_partie
@@ -132,7 +132,7 @@ class PhaseExplorationGUI:
         self.gui.clear_screen()
         self.gui.draw_stats_panel(hero=self.hero)
         self.gui.draw_viewport_panel("FORET SOMBRE")
-        self.gui.draw_dialog_panel("EXPLORATION")
+        # self.gui.draw_dialog_panel("EXPLORATION") # Supprimé pour éviter superposition
 
         # Viewport
         rect_foret = pygame.Rect(PANEL_VIEW_X + 20, PANEL_VIEW_Y + 40, PANEL_VIEW_W - 40, PANEL_VIEW_H - 60)
@@ -142,20 +142,14 @@ class PhaseExplorationGUI:
             pygame.draw.rect(self.gui.screen, (10, 30, 10), rect_foret)
             self.gui.draw_text("...", PANEL_VIEW_X + 100, PANEL_VIEW_Y + 150, (50, 100, 50), font=self.gui.title_font)
 
-        # Logs
-        start_log_y = PANEL_DIALOG_Y + 40
-        # On affiche les 3 derniers messages, y compris celui en cours d'écriture
-        msgs_to_show = self.message_log[-3:]
-        for i, msg in enumerate(msgs_to_show):
-            # Utiliser une police plus petite si possible, sinon standard
-            self.gui.draw_text(f"> {msg}", PANEL_DIALOG_X + 20, start_log_y + i * 25)
-
-        # Menu
-        menu_x = PANEL_DIALOG_X + PANEL_DIALOG_W - 200
-        for i, (label, _) in enumerate(options):
-            color = COLOR_HIGHLIGHT if i == selection else COLOR_TEXT
-            prefix = "► " if i == selection else "  "
-            self.gui.draw_text(f"{prefix}{label}", menu_x, start_log_y + i * 30, color)
+        # Interface du bas unifiée (Mode Standard)
+        self.gui.draw_bottom_interface(
+            menu_options=options,
+            selected_index=selection,
+            logs=self.message_log,
+            input_mode=False,
+            panel_title="EXPLORATION"
+        )
 
         self.gui.update_display()
 

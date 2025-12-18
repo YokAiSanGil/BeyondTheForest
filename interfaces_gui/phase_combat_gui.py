@@ -1,6 +1,6 @@
 import pygame
 import time
-from affichage_gui.gui_manager import GuiManager, COLOR_HIGHLIGHT, COLOR_TEXT, PANEL_VIEW_X, PANEL_VIEW_Y, PANEL_VIEW_W, PANEL_VIEW_H, PANEL_DIALOG_X, PANEL_DIALOG_Y, PANEL_DIALOG_W
+from affichage_gui.gui_manager import GuiManager, COLOR_HIGHLIGHT, COLOR_TEXT, PANEL_VIEW_X, PANEL_VIEW_Y, PANEL_VIEW_W, PANEL_VIEW_H, PANEL_DIALOG_X, PANEL_DIALOG_Y, PANEL_DIALOG_W, PANEL_LOG_X, PANEL_LOG_W
 from utils.de6faces import De
 from personnages import frapper, fuir, depecer
 from sauvegarde.gestion_sauvegarde import sauvegarder_partie, supprimer_sauvegarde
@@ -83,22 +83,18 @@ class PhaseCombatGUI:
         self.gui.draw_stats_panel(hero=self.hero)
         # On retire le titre automatique pour le dessiner nous-même avec la barre de vie
         self.gui.draw_viewport_panel(None)
-        self.gui.draw_dialog_panel("ACTIONS")
+        # self.gui.draw_dialog_panel("ACTIONS") # Supprimé pour éviter superposition
 
         self.dessiner_monstre()
 
-        # Logs
-        start_log_y = PANEL_DIALOG_Y + 40
-        for i, msg in enumerate(self.combat_log[-4:]):
-            self.gui.draw_text(f"> {msg}", PANEL_DIALOG_X + 20, start_log_y + i * 25)
-
-        # Menu (si options fournies)
-        if options:
-            menu_x = PANEL_DIALOG_X + PANEL_DIALOG_W - 200
-            for i, (label, _) in enumerate(options):
-                color = COLOR_HIGHLIGHT if i == selection else COLOR_TEXT
-                prefix = "► " if i == selection else "  "
-                self.gui.draw_text(f"{prefix}{label}", menu_x, start_log_y + i * 30, color)
+        # Interface du bas unifiée (Mode Standard)
+        self.gui.draw_bottom_interface(
+            menu_options=options,
+            selected_index=selection,
+            logs=self.combat_log,
+            input_mode=False,
+            panel_title="COMBAT"
+        )
         
         self.gui.update_display()
 

@@ -32,6 +32,11 @@ PANEL_DIALOG_Y = PANEL_VIEW_Y + PANEL_VIEW_H + MARGIN + HEADER_HEIGHT
 PANEL_DIALOG_W = PANEL_VIEW_W
 PANEL_DIALOG_H = SCREEN_HEIGHT - PANEL_DIALOG_Y - MARGIN
 
+# New constants for split dialog panel
+PANEL_MENU_WIDTH = 300
+PANEL_LOG_X = PANEL_DIALOG_X + PANEL_MENU_WIDTH + MARGIN
+PANEL_LOG_W = PANEL_DIALOG_W - PANEL_MENU_WIDTH - MARGIN
+
 class GuiManager:
     """
     Gère l'initialisation de Pygame, la fenêtre principale et les fonctions de dessin de base.
@@ -97,6 +102,37 @@ class GuiManager:
         else:
             self.screen.blit(surf, (x, y))
 
+    def draw_logs(self, messages, x, y, max_width, max_lines=4, color=COLOR_TEXT, font=None):
+        """Affiche les logs avec retour à la ligne automatique et limite le nombre de lignes visibles."""
+        if font is None: font = self.font
+        
+        wrapped_lines = []
+        for msg in messages:
+            words = msg.split(' ')
+            current_line = []
+            first_line_of_msg = True
+            
+            for word in words:
+                prefix = "> " if first_line_of_msg else "  "
+                test_line = prefix + ' '.join(current_line + [word])
+                if font.size(test_line)[0] <= max_width:
+                    current_line.append(word)
+                else:
+                    if current_line:
+                        wrapped_lines.append(prefix + ' '.join(current_line))
+                    current_line = [word]
+                    first_line_of_msg = False
+            
+            prefix = "> " if first_line_of_msg else "  "
+            if current_line:
+                wrapped_lines.append(prefix + ' '.join(current_line))
+            
+        # Keep only last max_lines
+        lines_to_draw = wrapped_lines[-max_lines:]
+        
+        for i, line in enumerate(lines_to_draw):
+            self.draw_text(line, x, y + i * font.get_linesize(), color, font)
+
     def get_events(self):
         events = pygame.event.get()
         for e in events:
@@ -149,6 +185,64 @@ class GuiManager:
 
     def draw_dialog_panel(self, title="DIALOGUE"):
         self.draw_panel(PANEL_DIALOG_X, PANEL_DIALOG_Y, PANEL_DIALOG_W, PANEL_DIALOG_H, title)
+
+    def draw_bottom_interface(self, menu_options=None, selected_index=0, logs=None, input_mode=False, input_text="", input_prompt="", panel_title=None):
+        """
+        Gère l'affichage de la zone du bas de manière flexible.
+        
+        Args:
+            menu_options (list): Liste des options pour le menu (Mode Standard).
+            selected_index (int): Index sélectionné (Mode Standard).
+            logs (list): Liste des messages à afficher (Mode Standard).
+            input_mode (bool): Si True, affiche une grande zone de saisie au lieu du split menu/log.
+            input_text (str): Le texte en cours de saisie (Mode Input).
+            input_prompt (str): La question ou l'invite (Mode Input).
+            panel_title (str): Titre du panneau (par défaut "ACTIONS" ou "SAISIE").
+        """
+        # Titre adaptatif
+        if panel_title is None:
+            title = "SAISIE" if input_mode else "ACTIONS"
+        else:
+            title = panel_title
+            
+        self.draw_dialog_panel(title)
+
+        if input_mode:
+            # --- MODE INPUT (Pleine largeur) ---
+            x = PANEL_DIALOG_X + 20
+            y = PANEL_DIALOG_Y + 30
+            
+            # Prompt
+            self.draw_text(input_prompt, x, y, COLOR_HIGHLIGHT)
+            
+            # Champ de saisie
+            y_text = y + 40
+            cursor = "_" if (pygame.time.get_ticks() // 500) % 2 == 0 else " "
+            # On affiche le texte brut. Si c'est très long, on pourrait ajouter un wrapping ici aussi.
+            self.draw_text(input_text + cursor, x, y_text, COLOR_TEXT)
+            
+            # Aide
+            y_help = PANEL_DIALOG_Y + PANEL_DIALOG_H - 30
+            self.draw_text("[Entrée] Valider   [Echap] Annuler", x, y_help, (150, 150, 150), font=pygame.font.SysFont("Courier New", 16))
+
+        else:
+            # --- MODE STANDARD (Split Menu / Logs) ---
+            # 1. Menu (Gauche)
+            if menu_options:
+                menu_x = PANEL_DIALOG_X + 20
+                menu_y = PANEL_DIALOG_Y + 30
+                for i, option in enumerate(menu_options):
+                    # Gérer si option est un tuple (Label, ID) ou juste str
+                    label = option[0] if isinstance(option, tuple) else option
+                    
+                    color = COLOR_HIGHLIGHT if i == selected_index else COLOR_TEXT
+                    prefix = "► " if i == selected_index else "  "
+                    self.draw_text(f"{prefix}{label}", menu_x, menu_y + i * 30, color)
+
+            # 2. Logs (Droite)
+            if logs:
+                # On utilise la méthode existante draw_logs qui gère le wrapping
+                self.draw_logs(logs, PANEL_LOG_X, PANEL_DIALOG_Y + 30, PANEL_LOG_W, max_lines=5)
 
     def input_text(self, prompt, x, y, max_length=15):
         """
