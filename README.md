@@ -38,8 +38,13 @@ BEYOND the FOREST invites you to explore the Dark Forest. Create your hero, batt
 
 4.  **Setup AI Model:**
     *   Create a folder named `models` in the root directory.
-    *   Download the `gemma-3npc-it-q4_k_m.gguf` model.
+    *   Download the `gemma-3npc-it-q4_k_m.gguf` model from Hugging Face:
+        [Download Model](https://huggingface.co/chimbiwide/Gemma3NPC-it-Q4-GGUF?referrer=grok.com)
     *   Place the file in `models/gemma-3npc-it-q4_k_m.gguf`.
+
+## Acknowledgments
+
+*   Special thanks to **Chimbiwide** and the team behind the **Gemma3NPC** model for providing the LLM that powers our NPC interactions.
 
 ## How to Play
 
