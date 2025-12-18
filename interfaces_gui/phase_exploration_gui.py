@@ -30,7 +30,8 @@ class PhaseExplorationGUI:
             for filename in os.listdir(img_dir):
                 if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
                     path = os.path.join(img_dir, filename)
-                    img = load_and_scale_image(path, target_w, target_h)
+                    # keep_ratio=False pour remplir tout le cadre
+                    img = load_and_scale_image(path, target_w, target_h, keep_ratio=False)
                     if img:
                         self.exploration_images.append(img)
         

@@ -3,7 +3,7 @@ Module widgets - Fonctions d'affichage et widgets pour le jeu.
 Ce module contient les fonctions d'affichage réutilisables et les widgets visuels.
 """
 
-from utils.outils import clear_screen, ecrire_lentement, suivant
+from Old_Console_version.utils.outils import clear_screen, ecrire_lentement, suivant
 from affichage.ascii_art import HUMAIN, NAIN, WOLF, ORC, DRAGONNET
 
 

@@ -12,7 +12,7 @@ from interfaces.phase_combat import PhaseCombat
 
 from interfaces.phase_exploration import PhaseExploration
 from affichage.widgets import afficher_stats_finales
-from utils.outils import clear_screen, ecrire_lentement, pause, suivant
+from Old_Console_version.utils.outils import clear_screen, ecrire_lentement, pause, suivant
 import random
 from interfaces.phase_soin import PhaseSoin
 

@@ -7,7 +7,7 @@ from .base_interface import BaseInterface
 from affichage.widgets import creer_barre_de_vie
 from affichage.ascii_art import HUMAIN, NAIN
 from affichage.menu_anime import MenuAnime
-from utils.outils import clear_screen, ecrire_lentement, suivant
+from Old_Console_version.utils.outils import clear_screen, ecrire_lentement, suivant
 
 
 class PhaseSoin(BaseInterface):

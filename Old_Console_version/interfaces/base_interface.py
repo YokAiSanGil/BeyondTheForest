@@ -6,7 +6,7 @@ Ce module contient la classe abstraite BaseInterface dont héritent toutes les p
 from abc import ABC, abstractmethod
 from typing import Any, Optional
 from affichage.menu_anime import MenuAnime
-from utils.outils import clear_screen, ecrire_lentement, suivant
+from Old_Console_version.utils.outils import clear_screen, ecrire_lentement, suivant
 
 
 class BaseInterface(ABC):

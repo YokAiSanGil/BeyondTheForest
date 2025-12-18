@@ -2,7 +2,7 @@
 module Personnage.
 Ce module contient les classes et fonctions pour la gestion des personnages.
 """
-from utils.outils import modificateur
+from personnages.utils import modificateur
 from utils.de6faces import De
 
 

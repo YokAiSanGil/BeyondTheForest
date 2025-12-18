@@ -36,15 +36,16 @@ def handle_menu_navigation(event, current_selection, num_options):
 ### --------------------------- Gestion des images --------------------------- ###
 
 
-def load_and_scale_image(path, max_width, max_height):
+def load_and_scale_image(path, max_width, max_height, keep_ratio=True):
     """
-    Charge une image et la redimensionne pour tenir dans les dimensions données
-    tout en conservant le ratio d'aspect.
+    Charge une image et la redimensionne pour tenir dans les dimensions données.
     
     Args:
         path (str): Chemin vers l'image.
         max_width (int): Largeur maximale.
         max_height (int): Hauteur maximale.
+        keep_ratio (bool): Si True, conserve le ratio d'aspect (fit). 
+                           Si False, étire l'image pour remplir (fill).
         
     Returns:
         pygame.Surface or None: L'image redimensionnée ou None si erreur.
@@ -55,16 +56,16 @@ def load_and_scale_image(path, max_width, max_height):
             
         img = pygame.image.load(path).convert_alpha()
         
-        # Calcul du ratio
-        width_ratio = max_width / img.get_width()
-        height_ratio = max_height / img.get_height()
-        scale = min(width_ratio, height_ratio)
-        
-        # Si l'image est plus petite que la cible, on peut choisir de l'agrandir ou non.
-        # Ici, on redimensionne seulement si nécessaire ou pour adapter au cadre.
-        # Pour le pixel art, on préfère souvent des entiers, mais ici on fait simple.
-        
-        new_size = (int(img.get_width() * scale), int(img.get_height() * scale))
+        if keep_ratio:
+            # Calcul du ratio pour "fit"
+            width_ratio = max_width / img.get_width()
+            height_ratio = max_height / img.get_height()
+            scale = min(width_ratio, height_ratio)
+            new_size = (int(img.get_width() * scale), int(img.get_height() * scale))
+        else:
+            # Force les dimensions exactes "fill"
+            new_size = (max_width, max_height)
+            
         img = pygame.transform.scale(img, new_size)
         
         return img

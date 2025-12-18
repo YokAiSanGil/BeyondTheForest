@@ -7,7 +7,7 @@ from .personnage import Personnage
 from .hero import Hero
 from .monstre import Monster
 from utils.de6faces import De
-from utils.outils import modificateur
+from personnages.utils import modificateur
 
 
 def calculer_degats(attaquant: Personnage):

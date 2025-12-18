@@ -12,7 +12,7 @@ from affichage.widgets import creer_barre_de_vie, combiner_blocs_ascii, afficher
 from affichage.ascii_art import HUMAIN, NAIN, WOLF, ORC, DRAGONNET
 from affichage.menu_anime import MenuAnime, afficher_fenetre
 from utils.music import battle_music, stop_music
-from utils.outils import clear_screen, ecrire_lentement, suivant
+from Old_Console_version.utils.outils import clear_screen, ecrire_lentement, suivant
 
 
 class PhaseCombat(BaseInterface):
@@ -114,7 +114,7 @@ class PhaseCombat(BaseInterface):
             
         # Afficher l'interface de combat
         # Menu de combat manuel pour maintenir l'interface en arrière-plan
-        from utils.outils import lire_fleche_bloquant
+        from Old_Console_version.utils.outils import lire_fleche_bloquant
         options = [("Attaquer", "attaquer"), ("Fuir", "fuir"), ("Statistiques", "stats")]
         curseur = 0
         while True:

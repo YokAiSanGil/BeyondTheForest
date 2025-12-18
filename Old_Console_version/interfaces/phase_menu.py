@@ -10,7 +10,7 @@ from sauvegarde.gestion_sauvegarde import sauvegarder_partie, lister_sauvegardes
 from affichage.ascii_art import OPENING, TITLE_SCREEN, NAIN, HUMAIN
 from affichage.animations import ligne_par_ligne
 from affichage.menu_anime import MenuAnime, afficher_fenetre, afficher_titre_simple
-from utils.outils import clear_screen, ecrire_lentement, suivant, pause
+from Old_Console_version.utils.outils import clear_screen, ecrire_lentement, suivant, pause
   # gestion_sauvegarde import consolidated above
 
 

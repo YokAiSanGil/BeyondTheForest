@@ -1,7 +1,7 @@
 """
 Module de menus animés pour Heroes vs Monsters.
 """
-from utils.outils import clear_screen, cacher_curseur, afficher_curseur, lire_fleche_bloquant
+from Old_Console_version.utils.outils import clear_screen, cacher_curseur, afficher_curseur, lire_fleche_bloquant
 from .ascii_art import OPENING, TITLE_SCREEN
 
 def afficher_titre_simple():
