@@ -18,7 +18,8 @@ class GameConfig:
         
         # Valeurs par défaut
         self.enable_scanlines = True
-        self.enable_flicker = True
+        self.enable_flicker = False
+        self.debug_force_hermit = False
         
         self.load()
         self.initialized = True
@@ -26,7 +27,8 @@ class GameConfig:
     def to_dict(self):
         return {
             "enable_scanlines": self.enable_scanlines,
-            "enable_flicker": self.enable_flicker
+            "enable_flicker": self.enable_flicker,
+            "debug_force_hermit": self.debug_force_hermit
         }
 
     def save(self):
@@ -45,6 +47,7 @@ class GameConfig:
                 data = json.load(f)
                 self.enable_scanlines = data.get("enable_scanlines", True)
                 self.enable_flicker = data.get("enable_flicker", True)
+                self.debug_force_hermit = data.get("debug_force_hermit", False)
         except Exception as e:
             print(f"Erreur chargement settings: {e}")
 

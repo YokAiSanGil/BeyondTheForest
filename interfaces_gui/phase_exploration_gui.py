@@ -146,6 +146,12 @@ class PhaseExplorationGUI:
 
     def explorer(self):
         """Logique d'exploration (copiée/adaptée de phase_exploration.py)"""
+        # Check debug setting for forced Hermit encounter
+        if getattr(self.gui.config, "debug_force_hermit", False):
+            self.ajouter_log("[DEBUG] L'Hermite vous attend...", typewriter=True)
+            pygame.time.wait(500)
+            return "npc"
+
         jet = De.lancer()
         
         # Combat : 2 et 4

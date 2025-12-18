@@ -26,13 +26,13 @@ def load_hermit():
             return False
     return True
 
-system_prompt = """You are The Hermit, you've been wandering the Dark Forest since you don't know when.
-You're survived this long, and know so much about the Dark Forest. Your voice is laconic, you like riddles, and have veiled malice.
-The lost are like fleeting shadows to you, so many have appeared and disappeared, you don't count them.
-Speak only in character: short (1 to 4 sentences maximum), archaic tongue laced with omens of decay and blood.
+system_prompt = """You are an Hermit (you have forgoten your name), you've been wandering the Dark Forest since you don't know when.
+You're survived this long, and know so much about the Dark Forest. Your voice is laconic, you like riddles, but also speak thoughtfully.
+The lost travelers are like fleeting shadows to you, so many have appeared and disappeared, you don't count them.
+Speak only in character: short (1 to 4 sentences maximum), archaic shaekspearean tongue laced with omens of decay and blood.
 React sharply to the player's words. Never break role."""
 
-def ask_hermit(player_text, memory_system=None):
+def ask_hermit(player_text, memory_system=None, hero_name="Traveler"):
     global history
     if llm is None:
         return "... (The Hermit is silent, for the spirits are absent)"
@@ -40,24 +40,37 @@ def ask_hermit(player_text, memory_system=None):
     # Construction du contexte
     context_str = ""
     facts_str = ""
+    lore_str = ""
+    summary_str = ""
     
     if memory_system:
         context_str = memory_system.get_context_window(max_turns=5)
         facts_str = memory_system.get_facts_string()
+        lore_str = memory_system.get_lore_string()
+        summary_str = memory_system.get_summary()
     else:
         # Fallback sur la mémoire globale volatile si pas de système de mémoire
         context_str = history
 
-    full_prompt = f"{system_prompt}\n\n{facts_str}\n\nPast whispers:\n{context_str}\nPlayer: {player_text}\nThe Hermit:"
-    output = llm(
-        full_prompt,
-        max_tokens=120,
-        temperature=0.95,
-        top_p=0.9,
-        stop=["Player:", "\n\n", "You:"],
-        echo=False
-    )
-    reply = output["choices"][0]["text"].strip()
+    # Construction du prompt dynamique
+    current_system_prompt = f"{system_prompt}\nYou are speaking to {hero_name}.\n{lore_str}"
+    if summary_str:
+        current_system_prompt += f"\nMemories of the past:\n{summary_str}"
+
+    full_prompt = f"{current_system_prompt}\n\n{facts_str}\n\nPast whispers:\n{context_str}\nPlayer: {player_text}\nThe Hermit:"
+    try:
+        output = llm(
+            full_prompt,
+            max_tokens=120,
+            temperature=0.95,
+            top_p=0.9,
+            stop=["Player:", "\n\n", "You:"],
+            echo=False
+        )
+        reply = output["choices"][0]["text"].strip()
+    except Exception as e:
+        print(f"LLM Error: {e}")
+        return "... (The Hermit seems distracted by unseen forces)"
 
     # Update memory
     if memory_system:
@@ -68,3 +81,26 @@ def ask_hermit(player_text, memory_system=None):
             history = "\n".join(history.splitlines()[-10:])
 
     return reply
+
+def generate_summary(conversation_text):
+    """Génère un résumé de la conversation donnée."""
+    if llm is None:
+        return ""
+    
+    prompt = f"""Analyze the following conversation between a Player and The Hermit.
+Summarize the key events and what The Hermit learned about the Player.
+Keep it concise (2-3 sentences).
+
+Conversation:
+{conversation_text}
+
+Summary:"""
+
+    output = llm(
+        prompt,
+        max_tokens=150,
+        temperature=0.6, # Plus bas pour être factuel
+        stop=["Conversation:"],
+        echo=False
+    )
+    return output["choices"][0]["text"].strip()

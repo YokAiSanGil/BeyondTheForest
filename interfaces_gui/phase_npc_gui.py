@@ -3,6 +3,7 @@ import threading
 import time
 from personnages.Hermit_NPC.Hermit_Brain import load_hermit, ask_hermit
 from personnages.Hermit_NPC.Hermit_Memories import HermitMemorySystem
+from personnages.Hermit_NPC.Hermit_Summary import HermitSummarizer
 from interfaces_gui.npc.chat_manager import ChatManager
 from interfaces_gui.npc.npc_renderer import NPCRenderer
 from interfaces_gui.utils import handle_menu_navigation
@@ -29,12 +30,14 @@ class PhaseNPCGUI:
         self.cursor_visible = True
         self.last_cursor_toggle = time.time()
 
-    def start(self, npc_memories=None, world_state=None):
+    def start(self, npc_memories=None, world_state=None, hero=None):
         """Called when entering the phase"""
         self.npc_memories = npc_memories if npc_memories is not None else {}
+        self.hero = hero
         
         # Initialisation du système de mémoire
         self.memory_system = HermitMemorySystem(self.npc_memories)
+        self.summarizer = HermitSummarizer(self.memory_system)
         
         self.world_state = world_state if world_state is not None else {}
         self.state = "LOADING"
@@ -54,12 +57,17 @@ class PhaseNPCGUI:
             self.state = "IDLE"
         else:
             self.state = "IDLE" # Allow user to leave even if error
-            self.chat_manager.add_, self.memory_systemmessage("System", "Error: AI Model not found or failed to load.")
+            self.chat_manager.add_message("System", "Error: AI Model not found or failed to load.")
             self.chat_manager.add_message("System", "Please check 'models/' folder.")
 
     def _generate_response_task(self, text):
-        response = ask_hermit(text)
-        self.pending_response = response
+        try:
+            hero_name = self.hero.nom if self.hero else "Traveler"
+            response = ask_hermit(text, self.memory_system, hero_name)
+            self.pending_response = response
+        except Exception as e:
+            print(f"Error in generation task: {e}")
+            self.pending_response = "... (Something disturbs the Hermit's thoughts)"
         # State remains GENERATING until update picks it up
 
     def handle_events(self, events):
@@ -77,6 +85,8 @@ class PhaseNPCGUI:
                         self.user_input = ""
                         pygame.key.start_text_input()
                     elif self.menu_options[self.selected_option] == "Leave":
+                        # Lancer le résumé en arrière-plan
+                        threading.Thread(target=self.summarizer.summarize_session).start()
                         return "exploration"
                 
                 # Scroll controls (spécifique NPC)

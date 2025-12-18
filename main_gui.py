@@ -57,7 +57,7 @@ def main():
                 
                 elif resultat == "npc":
                     # Lancement de la phase NPC
-                    phase_npc.start(npc_memories, world_state)
+                    phase_npc.start(npc_memories, world_state, hero)
                     while gui.running:
                         # Events
                         events = gui.get_events()

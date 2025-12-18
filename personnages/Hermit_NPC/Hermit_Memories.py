@@ -1,4 +1,6 @@
 import time
+import json
+import os
 
 class HermitMemorySystem:
     def __init__(self, memory_dict):
@@ -7,6 +9,7 @@ class HermitMemorySystem:
         memory_dict: référence vers le dictionnaire 'npc_memories' de la sauvegarde.
         """
         self.memory = memory_dict
+        self.lore = self.load_lore()
         
         # Initialisation de la structure si vide
         if "history" not in self.memory:
@@ -15,6 +18,31 @@ class HermitMemorySystem:
             self.memory["summary"] = "" # Résumé à long terme
         if "facts" not in self.memory:
             self.memory["facts"] = [] # Faits marquants (ex: "Player killed the Dragon")
+
+    def load_lore(self):
+        """Charge les connaissances statiques depuis le fichier JSON."""
+        try:
+            # Remonte de 3 niveaux: personnages/Hermit_NPC/ -> root
+            base_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            lore_path = os.path.join(base_path, "assets", "TheHermit", "lore.json")
+            if os.path.exists(lore_path):
+                with open(lore_path, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+        except Exception as e:
+            print(f"Error loading lore: {e}")
+        return {}
+
+    def get_lore_string(self):
+        """Formate le lore pour le prompt système."""
+        if not self.lore:
+            return ""
+        
+        lore_str = "Ancient Knowledge:\n"
+        if "world_history" in self.lore:
+            lore_str += "\n".join(self.lore["world_history"]) + "\n"
+        if "hermit_identity" in self.lore:
+            lore_str += "\n".join(self.lore["hermit_identity"]) + "\n"
+        return lore_str
 
     def add_interaction(self, user_text, npc_text):
         """Ajoute une interaction à la mémoire à court terme."""

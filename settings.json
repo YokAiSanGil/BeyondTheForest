@@ -1,4 +1,5 @@
 {
     "enable_scanlines": true,
-    "enable_flicker": false
+    "enable_flicker": false,
+    "debug_force_hermit": true
 }

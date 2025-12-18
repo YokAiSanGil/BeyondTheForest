@@ -62,6 +62,12 @@ class GuiManager:
         self.scanline_surface = create_scanlines(SCREEN_WIDTH, SCREEN_HEIGHT)
         self.running = True
         self.initialized = True
+        
+        # Load settings
+        self.config = GameConfig()
+        self.settings = {
+            "debug_force_hermit": getattr(self.config, "debug_force_hermit", False)
+        }
 
     def clear_screen(self):
         self.screen.fill(COLOR_BG)
