@@ -32,12 +32,23 @@ The lost are like fleeting shadows to you, so many have appeared and disappeared
 Speak only in character: short (1 to 4 sentences maximum), archaic tongue laced with omens of decay and blood.
 React sharply to the player's words. Never break role."""
 
-def ask_hermit(player_text):
+def ask_hermit(player_text, memory_system=None):
     global history
     if llm is None:
         return "... (The Hermit is silent, for the spirits are absent)"
 
-    full_prompt = f"{system_prompt}\n\nPast whispers:\n{history}\nPlayer: {player_text}\nThe Hermit:"
+    # Construction du contexte
+    context_str = ""
+    facts_str = ""
+    
+    if memory_system:
+        context_str = memory_system.get_context_window(max_turns=5)
+        facts_str = memory_system.get_facts_string()
+    else:
+        # Fallback sur la mémoire globale volatile si pas de système de mémoire
+        context_str = history
+
+    full_prompt = f"{system_prompt}\n\n{facts_str}\n\nPast whispers:\n{context_str}\nPlayer: {player_text}\nThe Hermit:"
     output = llm(
         full_prompt,
         max_tokens=120,
@@ -49,8 +60,11 @@ def ask_hermit(player_text):
     reply = output["choices"][0]["text"].strip()
 
     # Update memory
-    history += f"Player: {player_text}\nThe Hermit: {reply}\n"
-    if len(history.splitlines()) > 10:  # Keep last 5 turns
-        history = "\n".join(history.splitlines()[-10:])
+    if memory_system:
+        memory_system.add_interaction(player_text, reply)
+    else:
+        history += f"Player: {player_text}\nThe Hermit: {reply}\n"
+        if len(history.splitlines()) > 10:  # Keep last 5 turns
+            history = "\n".join(history.splitlines()[-10:])
 
     return reply

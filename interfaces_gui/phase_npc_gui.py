@@ -2,6 +2,7 @@ import pygame
 import threading
 import time
 from personnages.Hermit_NPC.Hermit_Brain import load_hermit, ask_hermit
+from personnages.Hermit_NPC.Hermit_Memories import HermitMemorySystem
 from interfaces_gui.npc.chat_manager import ChatManager
 from interfaces_gui.npc.npc_renderer import NPCRenderer
 from interfaces_gui.utils import handle_menu_navigation
@@ -31,6 +32,10 @@ class PhaseNPCGUI:
     def start(self, npc_memories=None, world_state=None):
         """Called when entering the phase"""
         self.npc_memories = npc_memories if npc_memories is not None else {}
+        
+        # Initialisation du système de mémoire
+        self.memory_system = HermitMemorySystem(self.npc_memories)
+        
         self.world_state = world_state if world_state is not None else {}
         self.state = "LOADING"
         self.chat_manager.history = []
@@ -49,7 +54,7 @@ class PhaseNPCGUI:
             self.state = "IDLE"
         else:
             self.state = "IDLE" # Allow user to leave even if error
-            self.chat_manager.add_message("System", "Error: AI Model not found or failed to load.")
+            self.chat_manager.add_, self.memory_systemmessage("System", "Error: AI Model not found or failed to load.")
             self.chat_manager.add_message("System", "Please check 'models/' folder.")
 
     def _generate_response_task(self, text):
@@ -106,12 +111,12 @@ class PhaseNPCGUI:
                         pygame.key.stop_text_input()
                     elif event.key == pygame.K_BACKSPACE:
                         self.user_input = self.user_input[:-1]
-            
-            elif event.type == pygame.TEXTINPUT and self.state == "INPUT":
-                self.user_input += event.text
+                
+                elif event.type == pygame.TEXTINPUT:
+                    self.user_input += event.text
             
             # Mouse wheel scrolling
-            elif event.type == pygame.MOUSEWHEEL:
+            if event.type == pygame.MOUSEWHEEL:
                 self.chat_manager.handle_scroll(event.y * 20, 10000) # Max scroll handled in draw/clamp
 
         return None
