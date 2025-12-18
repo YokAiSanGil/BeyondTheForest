@@ -50,7 +50,7 @@ class GuiManager:
             return
         pygame.init()
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-        pygame.display.set_caption("Heroes vs Monsters - GUI")
+        pygame.display.set_caption("BEYOND the FOREST - GUI")
         self.clock = pygame.time.Clock()
         self.font = pygame.font.SysFont("Courier New", 20, bold=True)
         self.title_font = pygame.font.SysFont("Courier New", 40, bold=True)

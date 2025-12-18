@@ -140,7 +140,7 @@ class PhaseExplorationGUI:
             self.gui.screen.blit(self.current_image, (PANEL_VIEW_X + 20, PANEL_VIEW_Y + 40))
         else:
             pygame.draw.rect(self.gui.screen, (10, 30, 10), rect_foret)
-            self.gui.draw_text("🌲  🌲  🌲", PANEL_VIEW_X + 100, PANEL_VIEW_Y + 150, (50, 100, 50), font=self.gui.title_font)
+            self.gui.draw_text("...", PANEL_VIEW_X + 100, PANEL_VIEW_Y + 150, (50, 100, 50), font=self.gui.title_font)
 
         # Logs
         start_log_y = PANEL_DIALOG_Y + 40
@@ -200,7 +200,7 @@ class PhaseExplorationGUI:
         if self.hero.points_de_vie < self.hero.points_de_vie_max:
             soin = self.hero.points_de_vie_max // 2
             self.hero.points_de_vie = min(self.hero.points_de_vie + soin, self.hero.points_de_vie_max)
-            self.ajouter_log(f"💤 Vous vous reposez (+{soin} PV).")
+            self.ajouter_log(f"Vous vous reposez (+{soin} PV).")
             sauvegarder_partie(self.hero, 0) # Sauvegarde auto
             self.ajouter_log("Partie sauvegardée.")
         else:

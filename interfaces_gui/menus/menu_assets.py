@@ -32,7 +32,7 @@ class MenuAssets:
     def _generate_dithered_title(self):
         """Génère une surface avec le titre vertical dithered."""
         words = ["BEYOND", "the", "FOREST"]
-        font = pygame.font.SysFont("Chalkduster", 60)
+        font = pygame.font.SysFont("Palatino", 60)
         
         max_w = 0
         total_h = 0
