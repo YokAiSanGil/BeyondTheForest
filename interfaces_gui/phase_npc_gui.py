@@ -8,6 +8,8 @@ from interfaces_gui.npc.chat_manager import ChatManager
 from interfaces_gui.npc.npc_renderer import NPCRenderer
 from interfaces_gui.utils import handle_menu_navigation
 
+from sauvegarde.gestion_sauvegarde import sauvegarder_partie
+
 class PhaseNPCGUI:
     def __init__(self):
         self.font = pygame.font.Font(None, 24)
@@ -29,6 +31,15 @@ class PhaseNPCGUI:
         # Cursor for input
         self.cursor_visible = True
         self.last_cursor_toggle = time.time()
+
+    def _save_callback(self):
+        """Callback appelé par le thread de résumé pour sauvegarder la partie."""
+        if self.hero:
+            try:
+                sauvegarder_partie(self.hero, 0, self.npc_memories, self.world_state)
+                print("DEBUG: Game saved automatically after Hermit summary.")
+            except Exception as e:
+                print(f"ERROR saving game in callback: {e}")
 
     def start(self, npc_memories=None, world_state=None, hero=None):
         """Called when entering the phase"""
@@ -63,6 +74,7 @@ class PhaseNPCGUI:
     def _generate_response_task(self, text):
         try:
             hero_name = self.hero.nom if self.hero else "Traveler"
+            # print(f"DEBUG: Asking Hermit as {hero_name}") 
             response = ask_hermit(text, self.memory_system, hero_name)
             self.pending_response = response
         except Exception as e:
@@ -85,8 +97,8 @@ class PhaseNPCGUI:
                         self.user_input = ""
                         pygame.key.start_text_input()
                     elif self.menu_options[self.selected_option] == "Leave":
-                        # Lancer le résumé en arrière-plan
-                        threading.Thread(target=self.summarizer.summarize_session).start()
+                        # Lancer le résumé en arrière-plan avec callback de sauvegarde
+                        threading.Thread(target=self.summarizer.summarize_session, args=(self._save_callback,)).start()
                         return "exploration"
                 
                 # Scroll controls (spécifique NPC)
@@ -142,15 +154,34 @@ class PhaseNPCGUI:
             
         # Check for pending response from thread
         if self.pending_response:
-            self.chat_manager.start_typing(self.pending_response)
-            self.pending_response = None
-            self.state = "TYPING"
+            if self.pending_response.startswith("[ACTION:COMBAT]"):
+                text = self.pending_response.replace("[ACTION:COMBAT]", "").strip()
+                self.chat_manager.start_typing(text)
+                self.pending_response = None
+                self.state = "TYPING_COMBAT"
+            else:
+                self.chat_manager.start_typing(self.pending_response)
+                self.pending_response = None
+                self.state = "TYPING"
             
-        # Handle Typing
+        # Check typing status
         if self.state == "TYPING":
             self.chat_manager.update_typing()
             if not self.chat_manager.is_typing:
                 self.state = "IDLE"
+        
+        elif self.state == "TYPING_COMBAT":
+            self.chat_manager.update_typing()
+            if not self.chat_manager.is_typing:
+                # Wait a bit for the player to read the threat
+                if not hasattr(self, 'combat_timer'):
+                    self.combat_timer = time.time()
+                
+                if time.time() - self.combat_timer > 3.0: # 3 seconds delay
+                    del self.combat_timer
+                    return "combat_boss"
+        
+        return None
 
     def draw(self, screen):
         self.renderer.draw_main_layout(

@@ -87,6 +87,10 @@ class HermitMemorySystem:
         """Met à jour le résumé (pourrait être appelé par un processus de 'dreaming' ou de compression)."""
         self.memory["summary"] = new_summary
 
+    def clear_history(self):
+        """Efface l'historique des conversations (après résumé)."""
+        self.memory["history"] = []
+
     def add_fact(self, fact):
         """Ajoute un fait marquant."""
         if fact not in self.memory["facts"]:

@@ -3,6 +3,7 @@ from interfaces_gui.phase_menu_gui import PhaseMenuGUI
 from interfaces_gui.phase_exploration_gui import PhaseExplorationGUI
 from interfaces_gui.phase_combat_gui import PhaseCombatGUI
 from interfaces_gui.phase_npc_gui import PhaseNPCGUI
+from personnages.monstre import creer_boss_hermite
 
 def main():
     # Initialisation du moteur graphique
@@ -58,20 +59,35 @@ def main():
                 elif resultat == "npc":
                     # Lancement de la phase NPC
                     phase_npc.start(npc_memories, world_state, hero)
+                    res_npc_loop = None
+                    
                     while gui.running:
                         # Events
                         events = gui.get_events()
                         res_npc = phase_npc.handle_events(events)
                         
                         if res_npc == "exploration":
+                            res_npc_loop = "exploration"
                             break
                             
                         # Update
-                        phase_npc.update()
+                        res_update = phase_npc.update()
+                        if res_update == "combat_boss":
+                            res_npc_loop = "combat_boss"
+                            break
                         
                         # Draw
                         phase_npc.draw(gui.screen)
                         gui.update_display()
+                    
+                    if res_npc_loop == "combat_boss":
+                        # Lancement du combat de boss
+                        boss = creer_boss_hermite()
+                        res_combat = phase_combat.afficher(hero, boss, npc_memories, world_state)
+                        
+                        if res_combat == "defaite":
+                            break # Game Over
+                        # Si victoire (improbable), on retourne à l'exploration ou fin du jeu
                         
                 elif resultat == "menu":
                     break # Retour au menu principal

@@ -37,6 +37,28 @@ def ask_hermit(player_text, memory_system=None, hero_name="Traveler"):
     if llm is None:
         return "... (The Hermit is silent, for the spirits are absent)"
 
+    # Trigger check: Final Boss Reveal
+    triggers = ["final boss", "boss final", "true form", "vrai forme", "you are the boss", "tu es le boss"]
+    if any(t in player_text.lower() for t in triggers):
+        reveal_prompt = f"""You are The Hermit. The player has just discovered your secret: YOU are the ancient evil, the Final Boss of this forest.
+Drop the disguise. Speak with terrifying power and malice. Tell them they have found the truth but will not live to share it.
+Short, menacing, final."""
+        
+        try:
+            output = llm(
+                reveal_prompt,
+                max_tokens=100,
+                temperature=1.0,
+                stop=["Player:", "\n\n"],
+                echo=False
+            )
+            reply = output["choices"][0]["text"].strip()
+            # On retourne le tag spécial pour que l'interface sache qu'il faut lancer le combat
+            return f"[ACTION:COMBAT] {reply}"
+        except Exception as e:
+            print(f"LLM Error (Reveal): {e}")
+            return "[ACTION:COMBAT] You have seen too much. Now you die."
+
     # Construction du contexte
     context_str = ""
     facts_str = ""
@@ -53,7 +75,10 @@ def ask_hermit(player_text, memory_system=None, hero_name="Traveler"):
         context_str = history
 
     # Construction du prompt dynamique
-    current_system_prompt = f"{system_prompt}\nYou are speaking to {hero_name}.\n{lore_str}"
+    # On renforce l'instruction sur le nom du joueur
+    identity_instruction = f"The traveler standing before you is named {hero_name}. Address them by name if appropriate, but do not be overly friendly."
+    
+    current_system_prompt = f"{system_prompt}\n{identity_instruction}\n{lore_str}"
     if summary_str:
         current_system_prompt += f"\nMemories of the past:\n{summary_str}"
 
@@ -82,14 +107,27 @@ def ask_hermit(player_text, memory_system=None, hero_name="Traveler"):
 
     return reply
 
-def generate_summary(conversation_text):
-    """Génère un résumé de la conversation donnée."""
+def generate_summary(conversation_text, previous_summary=""):
+    """Génère un résumé mis à jour en fusionnant l'ancien résumé et la nouvelle conversation."""
     if llm is None:
         return ""
     
-    prompt = f"""Analyze the following conversation between a Player and The Hermit.
-Summarize the key events and what The Hermit learned about the Player.
-Keep it concise (2-3 sentences).
+    if previous_summary:
+        prompt = f"""You are The Hermit's memory keeper.
+Update the summary of the traveler's history by integrating the new conversation.
+Keep the summary concise (max 4-5 sentences). Retain key facts (names, deeds) from the past.
+
+Previous Summary:
+{previous_summary}
+
+New Conversation:
+{conversation_text}
+
+Updated Summary:"""
+    else:
+        prompt = f"""You are The Hermit's memory keeper.
+Summarize the following conversation between a Player and The Hermit.
+Focus on who the player is and what they did. Keep it concise (2-3 sentences).
 
 Conversation:
 {conversation_text}
@@ -98,9 +136,9 @@ Summary:"""
 
     output = llm(
         prompt,
-        max_tokens=150,
-        temperature=0.6, # Plus bas pour être factuel
-        stop=["Conversation:"],
+        max_tokens=200,
+        temperature=0.6,
+        stop=["Conversation:", "Previous Summary:"],
         echo=False
     )
     return output["choices"][0]["text"].strip()

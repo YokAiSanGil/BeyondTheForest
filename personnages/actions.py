@@ -12,6 +12,10 @@ from personnages.utils import modificateur
 
 def calculer_degats(attaquant: Personnage):
     """Calcule les dégâts pour une attaque."""
+    # Special case for The True Hermit (One Hit Kill)
+    if attaquant.race == "The True Hermit":
+        return 9999
+        
     de4 = De(1, 4)
     return de4.lancer() + modificateur(attaquant.force)
 

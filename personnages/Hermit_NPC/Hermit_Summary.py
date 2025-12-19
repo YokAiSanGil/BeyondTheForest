@@ -4,13 +4,15 @@ class HermitSummarizer:
     def __init__(self, memory_system):
         self.memory_system = memory_system
 
-    def summarize_session(self):
+    def summarize_session(self, callback=None):
         """
         Récupère l'historique récent, génère un résumé et met à jour la mémoire.
+        callback: Fonction à appeler une fois le résumé terminé (ex: sauvegarde).
         """
         # Récupérer l'historique brut de la session
         history = self.memory_system.memory.get("history", [])
         if not history:
+            print("DEBUG: No history to summarize.")
             return
 
         # On ne résume que s'il y a eu des échanges récents
@@ -19,20 +21,21 @@ class HermitSummarizer:
             role = "Player" if msg["role"] == "user" else "The Hermit"
             conversation_text += f"{role}: {msg['content']}\n"
 
+        print("DEBUG: Generating summary...")
         # Générer le résumé
-        new_summary_part = generate_summary(conversation_text)
-        
-        if not new_summary_part:
-            return
-
-        # Mettre à jour le résumé global
         current_summary = self.memory_system.get_summary()
         
-        # Si le résumé devient trop long, on pourrait demander au LLM de le re-condenser
-        # Pour l'instant, on ajoute simplement à la suite
-        if current_summary:
-            updated_summary = f"{current_summary}\n[New Encounter]: {new_summary_part}"
-        else:
-            updated_summary = f"[First Encounter]: {new_summary_part}"
+        # Fusionner l'ancien résumé et la nouvelle conversation
+        updated_summary = generate_summary(conversation_text, current_summary)
+        
+        if updated_summary:
+            print(f"DEBUG: Summary generated: {updated_summary[:50]}...")
+            self.memory_system.update_summary(updated_summary)
+            # On efface l'historique brut pour ne garder que le résumé dans la sauvegarde
+            self.memory_system.clear_history()
             
-        self.memory_system.update_summary(updated_summary)
+            if callback:
+                print("DEBUG: Calling save callback...")
+                callback()
+        else:
+            print("DEBUG: Summary generation returned empty string.")

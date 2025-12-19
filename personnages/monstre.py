@@ -55,3 +55,19 @@ def creer_monstre_aleatoire():
     races_monstres = ["BloodFairy", "HellParasite", "NightScreamer", "StingFish", "StrygMoth"]
     race_choisie = random.choice(races_monstres)
     return Monster(race_choisie)
+
+def creer_boss_hermite():
+    """Crée le boss final (L'Hermite sous sa vraie forme)."""
+    boss = Monster("The True Hermit")
+    # Stats surpuissantes
+    boss._endurance_base = 50
+    boss._force_base = 50
+    boss.points_de_vie_max = 1000
+    boss.points_de_vie = 1000
+    
+    # Image du boss
+    import os
+    base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    boss.image_path = os.path.join(base_path, 'assets', 'Mosters', 'TheTrueHermit.png')
+    
+    return boss

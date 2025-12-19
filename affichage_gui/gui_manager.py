@@ -224,8 +224,33 @@ class GuiManager:
             # Champ de saisie
             y_text = y + 40
             cursor = "_" if (pygame.time.get_ticks() // 500) % 2 == 0 else " "
-            # On affiche le texte brut. Si c'est très long, on pourrait ajouter un wrapping ici aussi.
-            self.draw_text(input_text + cursor, x, y_text, COLOR_TEXT)
+            full_text = input_text + cursor
+            
+            # Wrapping logic
+            max_width = PANEL_DIALOG_W - 40
+            font = self.font
+            lines = []
+            words = full_text.split(' ')
+            current_line = []
+            
+            for word in words:
+                test_line = ' '.join(current_line + [word])
+                if font.size(test_line)[0] <= max_width:
+                    current_line.append(word)
+                else:
+                    if current_line:
+                        lines.append(' '.join(current_line))
+                    current_line = [word]
+            
+            if current_line:
+                lines.append(' '.join(current_line))
+            
+            # Limit visible lines to fit in panel
+            max_lines = 5 # Arbitrary limit or calculated based on height
+            visible_lines = lines[-max_lines:]
+            
+            for i, line in enumerate(visible_lines):
+                self.draw_text(line, x, y_text + i * font.get_linesize(), COLOR_TEXT)
             
             # Aide
             y_help = PANEL_DIALOG_Y + PANEL_DIALOG_H - 30

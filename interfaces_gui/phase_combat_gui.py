@@ -29,7 +29,11 @@ class PhaseCombatGUI:
         # Chargement et traitement de l'image du monstre
         self.monster_surface = None
         if hasattr(monstre, 'image_path'):
-            self.monster_surface = load_and_scale_image(monstre.image_path, 350, 350)
+            if monstre.race == "The True Hermit":
+                # Le boss remplit tout le panneau de vue
+                self.monster_surface = load_and_scale_image(monstre.image_path, PANEL_VIEW_W, PANEL_VIEW_H, keep_ratio=False)
+            else:
+                self.monster_surface = load_and_scale_image(monstre.image_path, 350, 350)
         
         # Intro cinématique bloquante
         self.typewriter_log(f"Un {monstre.race} sauvage apparaît !", show_menu=False, wait_input=False)
