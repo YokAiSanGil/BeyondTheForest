@@ -16,7 +16,7 @@ class GameConfig:
         if self.initialized:
             return
         
-        # Valeurs par défaut
+        # Default values
         self.enable_scanlines = True
         self.enable_flicker = False
         self.debug_force_hermit = False
@@ -36,7 +36,7 @@ class GameConfig:
             with open(SETTINGS_FILE, 'w') as f:
                 json.dump(self.to_dict(), f, indent=4)
         except Exception as e:
-            print(f"Erreur sauvegarde settings: {e}")
+            print(f"Error saving settings: {e}")
 
     def load(self):
         if not os.path.exists(SETTINGS_FILE):
@@ -49,7 +49,7 @@ class GameConfig:
                 self.enable_flicker = data.get("enable_flicker", True)
                 self.debug_force_hermit = data.get("debug_force_hermit", False)
         except Exception as e:
-            print(f"Erreur chargement settings: {e}")
+            print(f"Error loading settings: {e}")
 
     def toggle(self, setting_name):
         if hasattr(self, setting_name):
