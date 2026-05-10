@@ -1,23 +1,23 @@
 """
-Module Monstre.
-Ce module contient les classes et fonctions pour la gestion des monstres.
+Monster module.
+Contains the Monster class and factory functions.
 """
 
-from .personnage import Personnage
-from utils.de6faces import De
+from .character import Character
+from utils.dice import Die
 import random
 
-class Monster(Personnage):
+class Monster(Character):
     """
-    Classe pour les monstres. Hérite de Personnage et ajoute les bonus de race.
+    Monster class. Inherits from Character and adds race bonuses.
     """
     def __init__(self, race):
         super().__init__(race)
-        # Le loot est calculé à la création du monstre
-        self.cuir = De.lancer(1, 4) if self.peut_donner_cuir else 0
-        self.gold = De.lancer(1, 6) if self.peut_donner_or else 0
-        
-        # Chemin de l'image
+        # Loot is calculated at monster creation
+        self.leather = Die.roll(1, 4) if self.can_give_leather else 0
+        self.gold = Die.roll(1, 6) if self.can_give_gold else 0
+
+        # Image path
         import os
         base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         self.image_path = os.path.join(base_path, 'assets', 'Mosters', f'{race}_dithered.png')
@@ -32,42 +32,42 @@ class Monster(Personnage):
         return self._endurance_base + bonus
 
     @property
-    def force(self):
+    def strength(self):
         bonus = 0
         if self.race in ["HellParasite", "NightScreamer"]:
             bonus = 2
         elif self.race in ["StingFish"]:
             bonus = 1
-        return self._force_base + bonus
+        return self._strength_base + bonus
 
     @property
-    def peut_donner_cuir(self):
+    def can_give_leather(self):
         return self.race in ["StingFish", "HellParasite", "NightScreamer"]
 
     @property
-    def peut_donner_or(self):
+    def can_give_gold(self):
         return self.race in ["BloodFairy", "StrygMoth", "HellParasite"]
 
-def creer_monstre_aleatoire():
+def create_random_monster():
     """
-    Fonction pour créer un monstre aléatoire.
+    Create a random monster.
     """
-    races_monstres = ["BloodFairy", "HellParasite", "NightScreamer", "StingFish", "StrygMoth"]
-    race_choisie = random.choice(races_monstres)
-    return Monster(race_choisie)
+    monster_races = ["BloodFairy", "HellParasite", "NightScreamer", "StingFish", "StrygMoth"]
+    chosen_race = random.choice(monster_races)
+    return Monster(chosen_race)
 
-def creer_boss_hermite():
-    """Crée le boss final (L'Hermite sous sa vraie forme)."""
+def create_hermit_boss():
+    """Create the final boss (The True Hermit in their real form)."""
     boss = Monster("The True Hermit")
-    # Stats surpuissantes
+    # Overpowered stats
     boss._endurance_base = 50
-    boss._force_base = 50
-    boss.points_de_vie_max = 1000
-    boss.points_de_vie = 1000
-    
-    # Image du boss
+    boss._strength_base = 50
+    boss.max_hp = 1000
+    boss.hp = 1000
+
+    # Boss image
     import os
     base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     boss.image_path = os.path.join(base_path, 'assets', 'Mosters', 'TheTrueHermit.png')
-    
+
     return boss

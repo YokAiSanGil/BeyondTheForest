@@ -2,22 +2,22 @@ import pygame
 import os
 
 
-### --------------------------- Gestion des menus --------------------------- ###
+### --------------------------- Menu navigation --------------------------- ###
 
 
 def handle_menu_navigation(event, current_selection, num_options):
     """
-    Gère la navigation standard dans un menu (Haut, Bas, Entrée).
-    
+    Handle standard menu navigation (Up, Down, Enter).
+
     Args:
-        event (pygame.event.Event): L'événement à traiter.
-        current_selection (int): L'index de l'option actuellement sélectionnée.
-        num_options (int): Le nombre total d'options dans le menu.
-        
+        event (pygame.event.Event): The event to process.
+        current_selection (int): Currently selected option index.
+        num_options (int): Total number of options in the menu.
+
     Returns:
-        tuple: (nouvelle_selection, est_valide)
-               - nouvelle_selection (int): L'index mis à jour.
-               - est_valide (bool): True si l'utilisateur a appuyé sur Entrée.
+        tuple: (new_selection, is_confirmed)
+               - new_selection (int): The updated index.
+               - is_confirmed (bool): True if the user pressed Enter.
     """
     new_selection = current_selection
     is_confirmed = False
@@ -33,22 +33,22 @@ def handle_menu_navigation(event, current_selection, num_options):
     return new_selection, is_confirmed
 
 
-### --------------------------- Gestion des images --------------------------- ###
+### --------------------------- Image management --------------------------- ###
 
 
 def load_and_scale_image(path, max_width, max_height, keep_ratio=True):
     """
-    Charge une image et la redimensionne pour tenir dans les dimensions données.
-    
+    Load an image and resize it to fit within the given dimensions.
+
     Args:
-        path (str): Chemin vers l'image.
-        max_width (int): Largeur maximale.
-        max_height (int): Hauteur maximale.
-        keep_ratio (bool): Si True, conserve le ratio d'aspect (fit). 
-                           Si False, étire l'image pour remplir (fill).
-        
+        path (str): Path to the image.
+        max_width (int): Maximum width.
+        max_height (int): Maximum height.
+        keep_ratio (bool): If True, preserve aspect ratio (fit).
+                           If False, stretch the image to fill.
+
     Returns:
-        pygame.Surface or None: L'image redimensionnée ou None si erreur.
+        pygame.Surface or None: The resized image or None on error.
     """
     try:
         if not os.path.exists(path):
@@ -70,31 +70,31 @@ def load_and_scale_image(path, max_width, max_height, keep_ratio=True):
         
         return img
     except Exception as e:
-        print(f"Erreur chargement image {path}: {e}")
+        print(f"Error loading image {path}: {e}")
         return None
     
 
-### --------------------------- Effets de machine à écrire --------------------------- ###
+### --------------------------- Typewriter effects --------------------------- ###
 
 
 def typewriter_effect(gui_manager, messages_list, new_message, draw_callback, speed=30, skippable=True):
     """
-    Ajoute un message à une liste lettre par lettre en appelant draw_callback.
-    
+    Add a message to a list letter by letter while calling draw_callback.
+
     Args:
-        gui_manager: Instance du GuiManager (pour les events).
-        messages_list (list): La liste où ajouter le message.
-        new_message (str): Le message à écrire.
-        draw_callback (func): Fonction à appeler pour redessiner l'écran.
-        speed (int): Temps en ms entre chaque lettre.
-        skippable (bool): Si True, Espace/Entrée complète le texte instantanément.
+        gui_manager: GuiManager instance (for events).
+        messages_list (list): The list to append the message to.
+        new_message (str): The message to type out.
+        draw_callback (func): Function to call to redraw the screen.
+        speed (int): Time in ms between each letter.
+        skippable (bool): If True, Space/Enter completes the text instantly.
     """
-    # Ajouter placeholder
+    # Add placeholder
     messages_list.append("")
     full_text = new_message
     current_text = ""
-    
-    # Nettoyer les événements précédents
+
+    # Clear previous events
     pygame.event.clear()
     
     skip = False
@@ -120,18 +120,18 @@ def typewriter_effect(gui_manager, messages_list, new_message, draw_callback, sp
         if not skip:
             pygame.time.wait(speed)
             
-    # Finaliser
+    # Finalise
     messages_list[-1] = full_text
-    # Limiter la taille de l'historique (optionnel, mais bonne pratique)
+    # Limit history size (optional, but good practice)
     if len(messages_list) > 10:
         messages_list.pop(0)
 
 
-### --------------------------- Attente d'entrée utilisateur --------------------------- ###
+### --------------------------- Wait for user input --------------------------- ###
 
 
 def wait_for_enter(gui_manager):
-    """Bloque l'exécution jusqu'à ce que Entrée soit pressé."""
+    """Block execution until Enter is pressed."""
     pygame.event.clear()
     waiting = True
     while waiting and gui_manager.running:
