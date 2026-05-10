@@ -190,7 +190,7 @@ class PhaseExplorationGUI:
             return "exploration"
 
     def do_rest(self) -> tuple | None:
-        roll = DiceRollScreen().show(title="RESTING...", hero=self.hero)
+        roll = DiceRollScreen().show(title="RESTING...")
 
         ambush_chances = {1: 0.60, 2: 0.30, 3: 0.30, 4: 0.10, 5: 0.10, 6: 0.0}
         ambush_chance = ambush_chances[roll]
