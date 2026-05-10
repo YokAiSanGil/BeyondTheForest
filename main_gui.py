@@ -1,9 +1,16 @@
+import logging
 from display.gui_manager import GuiManager
 from interfaces_gui.phase_menu_gui import PhaseMenuGUI
 from interfaces_gui.phase_exploration_gui import PhaseExplorationGUI
 from interfaces_gui.phase_combat_gui import PhaseCombatGUI
 from interfaces_gui.phase_npc_gui import PhaseNPCGUI
 from characters.monster import create_hermit_boss
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    datefmt="%H:%M:%S"
+)
 
 def main():
     # Initialise the graphics engine

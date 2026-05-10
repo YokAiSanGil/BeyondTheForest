@@ -1,6 +1,9 @@
 import time
 import json
+import logging
 import os
+
+logger = logging.getLogger(__name__)
 
 class HermitMemorySystem:
     def __init__(self, memory_dict):
@@ -29,7 +32,7 @@ class HermitMemorySystem:
                 with open(lore_path, 'r', encoding='utf-8') as f:
                     return json.load(f)
         except Exception as e:
-            print(f"Error loading lore: {e}")
+            logger.error(f"Error loading lore: {e}")
         return {}
 
     def get_lore_string(self):

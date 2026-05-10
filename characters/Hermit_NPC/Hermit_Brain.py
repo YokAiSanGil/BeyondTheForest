@@ -1,5 +1,8 @@
-from llama_cpp import Llama
+import logging
 import os
+from llama_cpp import Llama
+
+logger = logging.getLogger(__name__)
 
 llm = None
 history = ""  # Global short-term memory (last 4-5 turns)
@@ -9,7 +12,7 @@ def load_hermit():
     if llm is None:
         model_path = "models/gemma-3npc-it-q4_k_m.gguf"
         if not os.path.exists(model_path):
-            print(f"ERROR: Model not found at {model_path}")
+            logger.error(f"Model not found at {model_path}")
             return False
             
         try:
@@ -19,10 +22,10 @@ def load_hermit():
                 n_gpu_layers=-1,  # Full GPU offload if available
                 verbose=False
             )
-            print("The Hermit awakens... (model loaded)")
+            logger.info("The Hermit awakens... (model loaded)")
             return True
         except Exception as e:
-            print(f"ERROR loading model: {e}")
+            logger.error(f"Error loading model: {e}")
             return False
     return True
 
@@ -56,7 +59,7 @@ Short, menacing, final."""
             # Return the special tag so the interface knows to trigger combat
             return f"[ACTION:COMBAT] {reply}"
         except Exception as e:
-            print(f"LLM Error (Reveal): {e}")
+            logger.error(f"LLM error (reveal): {e}")
             return "[ACTION:COMBAT] You have seen too much. Now you die."
 
     # Build context
@@ -94,7 +97,7 @@ Short, menacing, final."""
         )
         reply = output["choices"][0]["text"].strip()
     except Exception as e:
-        print(f"LLM Error: {e}")
+        logger.error(f"LLM error: {e}")
         return "... (The Hermit seems distracted by unseen forces)"
 
     # Update memory

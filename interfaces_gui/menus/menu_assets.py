@@ -1,6 +1,9 @@
-import pygame
+import logging
 import os
+import pygame
 from display.gui_manager import SCREEN_WIDTH, SCREEN_HEIGHT
+
+logger = logging.getLogger(__name__)
 
 class MenuAssets:
     """Manages shared graphical resources for menus (background, title)."""
@@ -14,20 +17,20 @@ class MenuAssets:
         # Go up 3 levels: interfaces_gui/menus/ -> interfaces_gui/ -> root/ -> assets/
         base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         img_path = os.path.join(base_dir, "assets", "TitleScreen", "ScreenTitleImage_dithered.png")
-        print(f"DEBUG: Attempting to load title image from: {img_path}")
+        logger.debug(f"Attempting to load title image from: {img_path}")
 
         if os.path.exists(img_path):
             try:
                 img = pygame.image.load(img_path).convert()
                 self.title_bg = pygame.transform.scale(img, (SCREEN_WIDTH, SCREEN_HEIGHT))
-                print("DEBUG: Title image loaded successfully")
+                logger.debug("Title image loaded successfully")
             except Exception as e:
-                print(f"Error loading title image: {e}")
+                logger.error(f"Error loading title image: {e}")
         else:
-            print("DEBUG: Title image file not found!")
+            logger.warning("Title image file not found!")
 
         self.title_surface = self._generate_dithered_title()
-        print(f"DEBUG: Title surface generated: {self.title_surface}")
+        logger.debug(f"Title surface generated: {self.title_surface}")
 
     def _generate_dithered_title(self):
         """Generate a surface with the vertical dithered title."""

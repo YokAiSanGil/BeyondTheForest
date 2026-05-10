@@ -1,5 +1,8 @@
-import pygame
+import logging
 import os
+import pygame
+
+logger = logging.getLogger(__name__)
 
 
 ### --------------------------- Menu navigation --------------------------- ###
@@ -70,7 +73,7 @@ def load_and_scale_image(path, max_width, max_height, keep_ratio=True):
         
         return img
     except Exception as e:
-        print(f"Error loading image {path}: {e}")
+        logger.error(f"Error loading image {path}: {e}")
         return None
     
 

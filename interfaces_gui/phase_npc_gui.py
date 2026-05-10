@@ -1,6 +1,9 @@
+import logging
 import pygame
 import threading
 import time
+
+logger = logging.getLogger(__name__)
 from characters.Hermit_NPC.Hermit_Brain import load_hermit, ask_hermit
 from characters.Hermit_NPC.Hermit_Memories import HermitMemorySystem
 from characters.Hermit_NPC.Hermit_Summary import HermitSummarizer
@@ -37,9 +40,9 @@ class PhaseNPCGUI:
         if self.hero:
             try:
                 save_game(self.hero, 0, self.npc_memories, self.world_state)
-                print("DEBUG: Game saved automatically after Hermit summary.")
+                logger.debug("Game saved automatically after Hermit summary.")
             except Exception as e:
-                print(f"ERROR saving game in callback: {e}")
+                logger.error(f"Error saving game in callback: {e}")
 
     def start(self, npc_memories=None, world_state=None, hero=None):
         """Called when entering the phase"""
@@ -77,7 +80,7 @@ class PhaseNPCGUI:
             response = ask_hermit(text, self.memory_system, hero_name)
             self.pending_response = response
         except Exception as e:
-            print(f"Error in generation task: {e}")
+            logger.error(f"Error in generation task: {e}")
             self.pending_response = "... (Something disturbs the Hermit's thoughts)"
         # State remains GENERATING until update picks it up
 

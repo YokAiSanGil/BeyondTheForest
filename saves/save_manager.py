@@ -2,7 +2,10 @@ import os
 import json
 import uuid
 import glob
+import logging
 from characters.hero import Hero
+
+logger = logging.getLogger(__name__)
 
 # Use absolute path based on script location
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -17,7 +20,7 @@ def migrate_old_saves():
     if not os.path.exists(LEGACY_SAVE_PATH):
         return
 
-    print("Migrating saves...")
+    logger.info("Migrating saves...")
     with open(LEGACY_SAVE_PATH, 'r', encoding='utf-8') as f:
         try:
             data = json.load(f)
@@ -53,7 +56,7 @@ def migrate_old_saves():
 
     # Rename old file to avoid re-migrating
     os.rename(LEGACY_SAVE_PATH, LEGACY_SAVE_PATH + ".migrated")
-    print("Migration complete.")
+    logger.info("Migration complete.")
 
 def list_saves() -> list:
     """

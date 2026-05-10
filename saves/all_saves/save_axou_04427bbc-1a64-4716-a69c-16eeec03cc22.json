@@ -1,0 +1,15 @@
+{
+    "hero": {
+        "id": "04427bbc-1a64-4716-a69c-16eeec03cc22",
+        "nom": "axou",
+        "race": "Nain",
+        "points_de_vie": 17,
+        "points_de_vie_max": 17,
+        "gold": 4,
+        "cuir": 3,
+        "morts": 0
+    },
+    "monstres_vaincus": 0,
+    "npc_memories": {},
+    "world_state": {}
+}

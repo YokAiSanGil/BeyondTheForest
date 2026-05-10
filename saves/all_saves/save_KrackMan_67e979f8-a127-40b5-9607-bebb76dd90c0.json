@@ -1,0 +1,15 @@
+{
+    "hero": {
+        "id": "67e979f8-a127-40b5-9607-bebb76dd90c0",
+        "nom": "KrackMan",
+        "race": "Humain",
+        "points_de_vie": 12,
+        "points_de_vie_max": 12,
+        "gold": 9,
+        "cuir": 0,
+        "morts": 0
+    },
+    "monstres_vaincus": 0,
+    "npc_memories": {},
+    "world_state": {}
+}
