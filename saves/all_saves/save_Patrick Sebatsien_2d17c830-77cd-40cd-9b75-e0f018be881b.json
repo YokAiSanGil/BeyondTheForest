@@ -1,15 +1,15 @@
 {
     "hero": {
         "id": "2d17c830-77cd-40cd-9b75-e0f018be881b",
-        "nom": "Patrick Sebatsien",
+        "name": "Patrick Sebatsien",
         "race": "Humain",
-        "points_de_vie": 2,
-        "points_de_vie_max": 15,
+        "hp": 15,
+        "max_hp": 15,
         "gold": 60,
-        "cuir": 22,
+        "leather": 22,
         "morts": 0
     },
-    "monstres_vaincus": 0,
+    "monsters_defeated": 0,
     "npc_memories": {
         "history": [],
         "summary": "Driven by a desire for wealth and recognition, the player sought an audience with The Hermit, initially engaging in superficial conversation. The Hermit, a Keeper of Forgotten Tales, questioned the player's motivations and the value of worldly pursuits like gold and fame. He revealed his long existence and witnessed the decline of all things, finding the player's dismissal of this profound history disappointing.",

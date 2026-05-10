@@ -7,6 +7,7 @@ from interfaces_gui.utils import handle_menu_navigation, load_and_scale_image, t
 from characters.monster import create_random_monster
 from saves.save_manager import save_game
 from interfaces_gui.exploration_events import get_exploration_event
+from interfaces_gui.dice_roll_screen import DiceRollScreen
 
 class PhaseExplorationGUI:
     def __init__(self):
@@ -84,7 +85,9 @@ class PhaseExplorationGUI:
                         elif result == "npc":
                             return "npc"
                     elif action == "rest":
-                        self.do_rest()
+                        result = self.do_rest()
+                        if isinstance(result, tuple) and result[0] == "combat":
+                            return result
                     elif action == "menu":
                         return "menu"
 
@@ -186,14 +189,24 @@ class PhaseExplorationGUI:
             self.add_log(msg, typewriter=True)
             return "exploration"
 
-    def do_rest(self):
+    def do_rest(self) -> tuple | None:
+        roll = DiceRollScreen().show(title="RESTING...", hero=self.hero)
+
+        ambush_chances = {1: 0.60, 2: 0.30, 3: 0.30, 4: 0.10, 5: 0.10, 6: 0.0}
+        ambush_chance = ambush_chances[roll]
+
+        if ambush_chance > 0 and random.random() < ambush_chance:
+            self.add_log("[!] You are ambushed in your sleep!", typewriter=True)
+            pygame.event.clear()
+            return "combat", create_random_monster()
+
         if self.hero.hp < self.hero.max_hp:
             heal = self.hero.max_hp // 2
             self.hero.hp = min(self.hero.hp + heal, self.hero.max_hp)
             self.add_log(f"You rest and recover +{heal} HP.")
-            save_game(self.hero, 0, self.npc_memories, self.world_state)  # Auto-save
-            self.add_log("Game saved.")
         else:
             self.add_log("You are already at full health.")
-            save_game(self.hero, 0, self.npc_memories, self.world_state)  # Auto-save even without healing
-            self.add_log("Game saved.")
+
+        save_game(self.hero, 0, self.npc_memories, self.world_state)
+        self.add_log("Game saved.")
+        return None
