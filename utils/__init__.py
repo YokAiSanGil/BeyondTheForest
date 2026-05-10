@@ -1,13 +1,13 @@
 """
-Module utils - Utilitaires généraux du jeu.
-Contient les outils, le système de dés et la gestion audio.
+Utils module - General game utilities.
+Contains dice system and audio management.
 """
 
-from .de6faces import De
+from .dice import Die
 from .music import battle_music, stop_music
 
 __all__ = [
-    'De',
+    'Die',
     'battle_music',
     'stop_music'
 ]

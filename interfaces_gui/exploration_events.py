@@ -1,68 +1,68 @@
 import random
-from utils.de6faces import De
+from utils.dice import Die
 
 def get_exploration_event(hero):
     """
-    Génère un événement d'exploration (texte d'ambiance + bonus éventuel).
-    Retourne (message, bonus_dict)
-    bonus_dict peut contenir {'gold': int} ou être vide.
+    Generate an exploration event (ambient text + optional bonus).
+    Returns (message, bonus_dict)
+    bonus_dict may contain {'gold': int} or be empty.
     """
     messages = [
-        "Vous avancez prudemment dans la forêt...",
-        "Les arbres murmurent des secrets anciens...",
-        "Vos pas résonnent sur le sol moussu...",
-        "Une brise mystérieuse caresse votre visage...",
-        "Vous sentez une présence dans l'ombre...",
-        "La forêt semble vivante, chaque bruit attire votre attention...",
-        "Vous entendez le chant des oiseaux au loin...",
-        "Un léger brouillard enveloppe les arbres...",
-        "Vous marchez sur un tapis de feuilles mortes...",
-        "Un craquement dans les buissons vous fait sursauter...",
-        "Vous avez l'impression d'être observé...",
-        "Un sanglier passe à proximité.",
-        "Vous continuez à avancer, le cœur battant...",
-        "Un sanglier passe à proximité, vous avez le ventre qui gargouille...",
-        "Des chants portés par le vent traversent la forêt obscure.",
-        "Vous avez l'impression d'être déjà passé par ici...",
-        "Un bruit étrange attire votre attention...",
-        "Vous entendez le murmure d'une rivière au loin...",
-        "L'odeur de la terre humide remplit vos narines...",
-        "Vous entendez le bruit de vos propres pas sur les feuilles mortes...",
-        "Une toile d'araignée scintille de rosée dans un rayon de soleil...",
-        "Un papillon coloré volette devant vous avant de disparaître...",
-        "Vous remarquez des traces de pas dans la terre meuble...",
-        "Le vent fait danser les feuilles au-dessus de votre tête...",
-        "Une branche craque quelque part derrière vous...",
-        "L'écho de vos pas se perd dans l'immensité de la forêt..."
+        "You move cautiously through the forest...",
+        "The trees whisper ancient secrets...",
+        "Your footsteps echo on the mossy ground...",
+        "A mysterious breeze brushes your face...",
+        "You sense a presence in the shadows...",
+        "The forest seems alive, every sound draws your attention...",
+        "You hear birdsong in the distance...",
+        "A light mist envelops the trees...",
+        "You walk on a carpet of dead leaves...",
+        "A crack in the bushes startles you...",
+        "You feel like you're being watched...",
+        "A wild boar passes nearby.",
+        "You press onward, heart pounding...",
+        "A boar passes nearby, your stomach growling...",
+        "Songs carried by the wind drift through the dark forest.",
+        "You feel like you've passed through here before...",
+        "A strange noise catches your attention...",
+        "You hear the murmur of a river in the distance...",
+        "The smell of damp earth fills your nostrils...",
+        "You hear the sound of your own steps on the dead leaves...",
+        "A spiderweb glistens with dew in a ray of sunlight...",
+        "A colourful butterfly flutters before you then vanishes...",
+        "You notice footprints in the soft earth...",
+        "The wind makes the leaves dance above your head...",
+        "A branch snaps somewhere behind you...",
+        "The echo of your steps fades into the vastness of the forest..."
     ]
-    
+
     if hero:
         messages.extend([
-            f"{hero.nom} scrute les alentours avec attention...",
-            f"{hero.nom} ressent une étrange énergie dans l'air...",
-            f"{hero.nom} remarque de curieuses empreintes dans la boue...",
-            f"{hero.nom} s'arrête un instant pour écouter...",
-            f"{hero.nom} contourne prudemment un buisson épineux..."
+            f"{hero.name} scans the surroundings carefully...",
+            f"{hero.name} senses a strange energy in the air...",
+            f"{hero.name} notices curious tracks in the mud...",
+            f"{hero.name} pauses for a moment to listen...",
+            f"{hero.name} carefully circles around a thorny bush..."
         ])
-    
+
     message = random.choice(messages)
     bonus = {}
-    
-    # Chance de bonus (1 sur 6)
-    if De.lancer() == 6:
-        type_bonus = De.lancer()
+
+    # Chance of bonus (1 in 6)
+    if Die.roll() == 6:
+        type_bonus = Die.roll()
         if type_bonus <= 3:
-            # Or
-            amount = De.lancer()
+            # Gold
+            amount = Die.roll()
             bonus['gold'] = amount
-            message += f" ✨ (+{amount} Or)"
+            message += f" ✨ (+{amount} Gold)"
         else:
-            # Ambiance extra
+            # Extra ambience
             extras = [
-                " Un champignon bizarre attire votre oeil.",
-                " Une luciole brille un instant.",
-                " Un hibou hulule au loin."
+                " A strange mushroom catches your eye.",
+                " A firefly glows for a moment.",
+                " An owl hoots in the distance."
             ]
             message += f"{random.choice(extras)}"
-            
+
     return message, bonus

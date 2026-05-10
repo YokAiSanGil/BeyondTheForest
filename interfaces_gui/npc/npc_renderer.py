@@ -1,6 +1,6 @@
 import pygame
 import os
-from affichage_gui.gui_manager import (
+from display.gui_manager import (
     GuiManager, COLOR_TEXT, COLOR_HIGHLIGHT, COLOR_BORDER,
     PANEL_STATS_X, PANEL_STATS_Y, PANEL_STATS_W, PANEL_STATS_H,
     PANEL_VIEW_X, PANEL_VIEW_Y, PANEL_VIEW_W, PANEL_VIEW_H
@@ -17,11 +17,11 @@ class NPCRenderer:
         self.fade_alpha = 0
 
     def _load_npc_image(self):
-        # Assuming this file is in interfaces_gui/npc/
-        # We need to go up 3 levels to get to root: npc -> interfaces_gui -> HeroesVsMonsters
+        # This file is in interfaces_gui/npc/
+        # Go up 3 levels to get to root: npc -> interfaces_gui -> HeroesVsMonsters
         base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         path = os.path.join(base_dir, "assets", "TheHermit", "hermit.png")
-        
+
         return load_and_scale_image(path, self.npc_rect.width, self.npc_rect.height)
 
     def update_fade(self):
@@ -33,27 +33,27 @@ class NPCRenderer:
 
     def draw_main_layout(self, screen, state, chat_manager, loading_text, menu_options, selected_option, user_input):
         self.gui.clear_screen()
-        
+
         # 1. Left Panel (NPC Art)
         self.gui.draw_panel(PANEL_STATS_X, PANEL_STATS_Y, PANEL_STATS_W, PANEL_STATS_H, None)
         self._draw_npc(screen)
-        
+
         # Label "THE HERMIT"
         label = self.font.render("THE HERMIT", True, COLOR_TEXT)
         screen.blit(label, (PANEL_STATS_X + (PANEL_STATS_W - label.get_width()) // 2, self.npc_rect.bottom + 20))
 
         # 2. Top Right Panel (Chat)
         self.gui.draw_viewport_panel("CHAT")
-        
+
         # Clipping rect for chat
         chat_rect = pygame.Rect(PANEL_VIEW_X + 5, PANEL_VIEW_Y + 5, PANEL_VIEW_W - 10, PANEL_VIEW_H - 10)
         screen.set_clip(chat_rect)
-        
+
         if state == "LOADING":
             self._draw_loading(screen, loading_text)
         else:
             self._draw_chat(screen, chat_manager)
-            
+
         screen.set_clip(None)
 
         # 3. Bottom Right Panel (Unified Interface)
@@ -88,37 +88,37 @@ class NPCRenderer:
         x_left = PANEL_VIEW_X + 20
         x_right = PANEL_VIEW_X + PANEL_VIEW_W - 20
         y_top = PANEL_VIEW_Y + 20
-        
+
         # Calculate total height and blocks
         total_height = 0
         message_blocks = []
-        
+
         for speaker, text in chat_manager.history:
             is_player = (speaker == "Player")
             color = (100, 200, 255) if is_player else (200, 100, 100)
             align_right = is_player
-            
+
             max_w = PANEL_VIEW_W * 0.6
             lines = chat_manager.wrap_text(text, max_w)
             block_h = len(lines) * 25 + 10
-            
+
             message_blocks.append((lines, color, align_right, block_h))
             total_height += block_h
 
         # Auto-scroll logic
         view_h = PANEL_VIEW_H - 40
         max_scroll = max(0, total_height - view_h)
-        
+
         if chat_manager.scroll_to_bottom:
             chat_manager.scroll_y = max_scroll
             if not chat_manager.is_typing:
                 chat_manager.scroll_to_bottom = False
-        
+
         chat_manager.clamp_scroll(max_scroll)
-            
+
         # Draw visible blocks
         current_y = y_top - chat_manager.scroll_y
-        
+
         for lines, color, align_right, block_h in message_blocks:
             if current_y + block_h > PANEL_VIEW_Y and current_y < PANEL_VIEW_Y + PANEL_VIEW_H:
                 text_y = current_y
@@ -132,16 +132,10 @@ class NPCRenderer:
             current_y += block_h
 
     def _draw_text_wrapped(self, screen, text, x, y, max_width, color):
-        # We can use chat_manager's wrap_text if we had access, but we can duplicate or make static
-        # Let's just implement a simple one here or use the one from ChatManager if we pass it.
-        # But _draw_loading doesn't take chat_manager.
-        # Let's duplicate for now to keep it simple, or better:
-        # We can make wrap_text a static method or utility.
-        # For now, I'll just implement it here.
         words = text.split(' ')
         lines = []
         current_line = []
-        
+
         for word in words:
             test_line = ' '.join(current_line + [word])
             w, h = self.font.size(test_line)
@@ -151,7 +145,7 @@ class NPCRenderer:
                 lines.append(' '.join(current_line))
                 current_line = [word]
         lines.append(' '.join(current_line))
-        
+
         for line in lines:
             surf = self.font.render(line, True, color)
             screen.blit(surf, (x, y))

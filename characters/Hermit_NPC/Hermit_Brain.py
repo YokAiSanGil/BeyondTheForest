@@ -38,7 +38,7 @@ def ask_hermit(player_text, memory_system=None, hero_name="Traveler"):
         return "... (The Hermit is silent, for the spirits are absent)"
 
     # Trigger check: Final Boss Reveal
-    triggers = ["final boss", "boss final", "true form", "vrai forme", "you are the boss", "tu es le boss"]
+    triggers = ["final boss", "true form", "you are the boss"]
     if any(t in player_text.lower() for t in triggers):
         reveal_prompt = f"""You are The Hermit. The player has just discovered your secret: YOU are the ancient evil, the Final Boss of this forest.
 Drop the disguise. Speak with terrifying power and malice. Tell them they have found the truth but will not live to share it.
@@ -53,29 +53,29 @@ Short, menacing, final."""
                 echo=False
             )
             reply = output["choices"][0]["text"].strip()
-            # On retourne le tag spécial pour que l'interface sache qu'il faut lancer le combat
+            # Return the special tag so the interface knows to trigger combat
             return f"[ACTION:COMBAT] {reply}"
         except Exception as e:
             print(f"LLM Error (Reveal): {e}")
             return "[ACTION:COMBAT] You have seen too much. Now you die."
 
-    # Construction du contexte
+    # Build context
     context_str = ""
     facts_str = ""
     lore_str = ""
     summary_str = ""
-    
+
     if memory_system:
         context_str = memory_system.get_context_window(max_turns=5)
         facts_str = memory_system.get_facts_string()
         lore_str = memory_system.get_lore_string()
         summary_str = memory_system.get_summary()
     else:
-        # Fallback sur la mémoire globale volatile si pas de système de mémoire
+        # Fallback to volatile global memory if no memory system is available
         context_str = history
 
-    # Construction du prompt dynamique
-    # On renforce l'instruction sur le nom du joueur
+    # Build the dynamic prompt
+    # Reinforce the instruction about the player's name
     identity_instruction = f"The traveler standing before you is named {hero_name}. Address them by name if appropriate, but do not be overly friendly."
     
     current_system_prompt = f"{system_prompt}\n{identity_instruction}\n{lore_str}"
@@ -108,7 +108,7 @@ Short, menacing, final."""
     return reply
 
 def generate_summary(conversation_text, previous_summary=""):
-    """Génère un résumé mis à jour en fusionnant l'ancien résumé et la nouvelle conversation."""
+    """Generate an updated summary by merging the previous summary with the new conversation."""
     if llm is None:
         return ""
     
