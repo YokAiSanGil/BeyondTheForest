@@ -1,4 +1,4 @@
-def modifier(value):
+def modifier(value: int) -> int:
     """Calculate the modifier based on strength/endurance."""
     if value < 5:
         return -1

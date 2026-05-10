@@ -13,7 +13,7 @@ SAVES_ROOT = os.path.join(BASE_DIR, 'saves')
 SAVES_DIR = os.path.join(SAVES_ROOT, 'all_saves')
 LEGACY_SAVE_PATH = os.path.join(SAVES_ROOT, 'sauvegarde.json')
 
-def migrate_old_saves():
+def migrate_old_saves() -> None:
     """
     Migrate saves from old format (sauvegarde.json) to new format (individual files).
     """
@@ -58,7 +58,7 @@ def migrate_old_saves():
     os.rename(LEGACY_SAVE_PATH, LEGACY_SAVE_PATH + ".migrated")
     logger.info("Migration complete.")
 
-def list_saves() -> list:
+def list_saves() -> list[dict]:
     """
     Return a list of saves as dicts {'name': str, 'id': str}.
     """
@@ -88,7 +88,7 @@ def list_saves() -> list:
 
     return result
 
-def save_game(hero: Hero, monsters_defeated: int, npc_memories: dict = None, world_state: dict = None):
+def save_game(hero: Hero, monsters_defeated: int, npc_memories: dict = None, world_state: dict = None) -> None:
     """
     Save the hero's game to an individual JSON file.
     """
@@ -129,7 +129,7 @@ def save_game(hero: Hero, monsters_defeated: int, npc_memories: dict = None, wor
     with open(filepath, 'w', encoding='utf-8') as f:
         json.dump(save_data, f, indent=4, ensure_ascii=False)
 
-def load_game(identifier: str) -> tuple:
+def load_game(identifier: str) -> tuple[Hero | None, int, dict, dict]:
     """
     Load a hero's game by ID.
     Returns (Hero, monsters_defeated, npc_memories, world_state).
@@ -168,7 +168,7 @@ def load_game(identifier: str) -> tuple:
 
     return None, 0, {}, {}
 
-def delete_save(hero_id: str):
+def delete_save(hero_id: str) -> None:
     """
     Delete the save file matching the given hero ID.
     """

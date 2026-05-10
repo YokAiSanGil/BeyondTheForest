@@ -9,20 +9,19 @@ class Hero(Character):
     """
     Hero class. Inherits from Character and adds race bonuses.
     """
-    def __init__(self, name, race):
+    def __init__(self, name: str, race: str):
         super().__init__(race, name)
-        self.id = None  # Unique identifier for saves
-        self.gold = 0
-        self.leather = 0
-        # Number of times the hero has died (for save tracking)
-        self.morts = 0
+        self.id: str = None
+        self.gold: int = 0
+        self.leather: int = 0
+        self.morts: int = 0
 
     @property
-    def endurance(self):
+    def endurance(self) -> int:
         bonus = 2 if self.race == "Dwarf" else (1 if self.race == "Human" else 0)
         return self._endurance_base + bonus
 
     @property
-    def strength(self):
+    def strength(self) -> int:
         bonus = 1 if self.race == "Human" else 0
         return self._strength_base + bonus

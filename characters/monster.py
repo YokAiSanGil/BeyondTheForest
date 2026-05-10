@@ -11,19 +11,19 @@ class Monster(Character):
     """
     Monster class. Inherits from Character and adds race bonuses.
     """
-    def __init__(self, race):
+    def __init__(self, race: str):
         super().__init__(race)
         # Loot is calculated at monster creation
-        self.leather = Die.roll(1, 4) if self.can_give_leather else 0
-        self.gold = Die.roll(1, 6) if self.can_give_gold else 0
+        self.leather: int = Die.roll(1, 4) if self.can_give_leather else 0
+        self.gold: int = Die.roll(1, 6) if self.can_give_gold else 0
 
         # Image path
         import os
         base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        self.image_path = os.path.join(base_path, 'assets', 'Mosters', f'{race}_dithered.png')
+        self.image_path: str = os.path.join(base_path, 'assets', 'Mosters', f'{race}_dithered.png')
 
     @property
-    def endurance(self):
+    def endurance(self) -> int:
         bonus = 0
         if self.race in ["HellParasite", "StrygMoth"]:
             bonus = 2
@@ -32,7 +32,7 @@ class Monster(Character):
         return self._endurance_base + bonus
 
     @property
-    def strength(self):
+    def strength(self) -> int:
         bonus = 0
         if self.race in ["HellParasite", "NightScreamer"]:
             bonus = 2
@@ -41,22 +41,20 @@ class Monster(Character):
         return self._strength_base + bonus
 
     @property
-    def can_give_leather(self):
+    def can_give_leather(self) -> bool:
         return self.race in ["StingFish", "HellParasite", "NightScreamer"]
 
     @property
-    def can_give_gold(self):
+    def can_give_gold(self) -> bool:
         return self.race in ["BloodFairy", "StrygMoth", "HellParasite"]
 
-def create_random_monster():
-    """
-    Create a random monster.
-    """
+def create_random_monster() -> "Monster":
+    """Create a random monster."""
     monster_races = ["BloodFairy", "HellParasite", "NightScreamer", "StingFish", "StrygMoth"]
     chosen_race = random.choice(monster_races)
     return Monster(chosen_race)
 
-def create_hermit_boss():
+def create_hermit_boss() -> "Monster":
     """Create the final boss (The True Hermit in their real form)."""
     boss = Monster("The True Hermit")
     # Overpowered stats

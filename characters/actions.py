@@ -2,6 +2,7 @@
 Actions module.
 Contains combat action functions used in the game.
 """
+from typing import Optional
 from .character import Character
 from .hero import Hero
 from .monster import Monster
@@ -9,7 +10,7 @@ from utils.dice import Die
 from characters.utils import modifier
 
 
-def calculate_damage(attacker: Character):
+def calculate_damage(attacker: Character) -> int:
     """Calculate damage for an attack."""
     # Special case for The True Hermit (One Hit Kill)
     if attacker.race == "The True Hermit":
@@ -18,7 +19,7 @@ def calculate_damage(attacker: Character):
     die4 = Die(1, 4)
     return die4.roll() + modifier(attacker.strength)
 
-def attack(attacker: Character, target: Character):
+def attack(attacker: Character, target: Character) -> tuple[list[str], int]:
     """
     Prepares an attack sequence and returns messages and damage.
     Does NOT apply damage directly.
@@ -43,7 +44,7 @@ def attack(attacker: Character, target: Character):
 
     return messages, damage
 
-def flee(hero: Hero, monster: Monster):
+def flee(hero: Hero, monster: Monster) -> tuple[bool, list[str], int]:
     """
     Attempt to flee combat. Returns a tuple (success, messages, damage taken if failed).
     """
@@ -86,7 +87,7 @@ def flee(hero: Hero, monster: Monster):
         messages.extend(counter_messages)
         return False, messages, counter_damage
 
-def loot(hero: Hero, monster: Monster):
+def loot(hero: Hero, monster: Monster) -> list[str]:
     """The hero searches a dead monster and returns messages."""
     messages = []
     if monster.is_alive():

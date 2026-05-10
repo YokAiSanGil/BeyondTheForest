@@ -5,26 +5,26 @@ Allows creating dice with any number of faces and rolling multiple dice keeping 
 import random
 
 class Die:
-    def __init__(self, minimum=1, maximum=6):
+    def __init__(self, minimum: int = 1, maximum: int = 6):
         self._minimum = minimum
         self._maximum = maximum
-        self.value = 0
+        self.value: int = 0
 
     @property
-    def minimum(self):
+    def minimum(self) -> int:
         return self._minimum
 
     @property
-    def maximum(self):
+    def maximum(self) -> int:
         return self._maximum
 
     @staticmethod
-    def roll(minimum=1, maximum=6):
+    def roll(minimum: int = 1, maximum: int = 6) -> int:
         """Roll the die and return a random value between minimum and maximum."""
         return random.randint(minimum, maximum)
 
     @staticmethod
-    def roll_n_dice(n, best=None, minimum=1, maximum=6):
+    def roll_n_dice(n: int, best: int = None, minimum: int = 1, maximum: int = 6) -> int:
         """Roll n dice and return the sum of the best results (if specified), otherwise the total sum."""
         rolls = [random.randint(minimum, maximum) for _ in range(n)]
         if best and best < n:
