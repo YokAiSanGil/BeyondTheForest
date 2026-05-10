@@ -49,8 +49,16 @@ class DiceRollScreen:
         px = (SCREEN_WIDTH  - _POPUP_SIZE) // 2
         py = (SCREEN_HEIGHT - _POPUP_SIZE) // 2
 
+        blink_visible = True
+        last_blink    = pygame.time.get_ticks()
+
         while self.gui.running:
             now = pygame.time.get_ticks()
+
+            # Blink the [ENTER] hint every 500 ms
+            if now - last_blink >= 500:
+                blink_visible = not blink_visible
+                last_blink    = now
 
             for event in self.gui.get_events():
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
@@ -93,27 +101,41 @@ class DiceRollScreen:
                 dot_color  = _BLACK
                 prompt     = "[Enter] Continue"
 
-            self._draw(background, px, py, face, die_color, dot_color, title, prompt)
+            self._draw(background, px, py, face, die_color, dot_color, title, prompt, blink_visible)
 
         return final_value
 
-    def _draw(self, background, px, py, face, die_color, dot_color, title, prompt):
+    def _draw(self, background, px, py, face, die_color, dot_color, title, prompt, blink_visible):
         self.gui.screen.blit(background, (0, 0))
         self.gui.draw_panel(px, py, _POPUP_SIZE, _POPUP_SIZE, title=title)
 
         cx = px + _POPUP_SIZE // 2
         cy = py + _POPUP_SIZE // 2 - 10
 
-        # Die — only shown after throw
-        if face is not None:
+        if face is None:
+            # Waiting state — message centred in the popup
+            self.gui.draw_text(
+                "You must throw your dice...",
+                cx, cy,
+                COLOR_TEXT, center=True
+            )
+            # Blinking [ENTER] below the popup window
+            if blink_visible:
+                self.gui.draw_text(
+                    "[ ENTER ]",
+                    cx, py + _POPUP_SIZE + 24,
+                    COLOR_HIGHLIGHT, center=True
+                )
+        else:
+            # Die — shown after throw
             bx = cx - _DIE_SIZE // 2
             by = cy - _DIE_SIZE // 2
-            pygame.draw.rect(self.gui.screen, die_color,  (bx, by, _DIE_SIZE, _DIE_SIZE), border_radius=18)
-            pygame.draw.rect(self.gui.screen, _BLACK,     (bx, by, _DIE_SIZE, _DIE_SIZE), 2, border_radius=18)
+            pygame.draw.rect(self.gui.screen, die_color, (bx, by, _DIE_SIZE, _DIE_SIZE), border_radius=18)
+            pygame.draw.rect(self.gui.screen, _BLACK,    (bx, by, _DIE_SIZE, _DIE_SIZE), 2, border_radius=18)
             self._draw_dots(face, bx, by, dot_color)
 
-        if prompt:
-            self.gui.draw_text(prompt, cx, py + _POPUP_SIZE - 28, COLOR_TEXT, center=True)
+            if prompt:
+                self.gui.draw_text(prompt, cx, py + _POPUP_SIZE - 28, COLOR_TEXT, center=True)
 
         self.gui.update_display()
 
