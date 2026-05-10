@@ -1,8 +1,8 @@
 import random
 import pygame
 from display.gui_manager import (
-    GuiManager, COLOR_HIGHLIGHT, COLOR_TEXT, COLOR_BORDER, COLOR_BG,
-    PANEL_VIEW_X, PANEL_VIEW_Y, PANEL_VIEW_W, PANEL_VIEW_H
+    GuiManager, COLOR_HIGHLIGHT, COLOR_TEXT, COLOR_BORDER,
+    SCREEN_WIDTH, SCREEN_HEIGHT
 )
 from utils.dice import Die
 
@@ -17,9 +17,9 @@ _DOT_GRIDS = {
     6: [(0, 0), (2, 0), (0, 1), (2, 1), (0, 2), (2, 2)],
 }
 
-_DIE_SIZE = 180
-_DOT_RADIUS = 12
-_DOT_PADDING = 40  # Distance from edge of box to outer dots
+_DIE_SIZE = 200
+_DOT_RADIUS = 14
+_DOT_PADDING = 44
 
 
 class DiceRollScreen:
@@ -29,91 +29,86 @@ class DiceRollScreen:
 
     def show(self, title: str = "ROLL THE DICE", hero=None) -> int:
         """
-        Display an animated dice roll screen.
-        Blocks until the player confirms. Returns the rolled value (1–6).
+        Display a full-screen dice overlay.
+        Dice shuffles until the player presses Enter to throw, then
+        a second Enter confirms the result. Returns the rolled value (1–6).
         """
-        final_value = Die.roll(1, 6)   # Outcome decided before animation starts
+        final_value = Die.roll(1, 6)   # Outcome fixed before the throw
         shuffle_value = random.randint(1, 6)
-
         locked = False
-        waiting_confirm = False
-        shuffle_start = pygame.time.get_ticks()
-        last_shuffle = shuffle_start
+        last_shuffle = pygame.time.get_ticks()
 
         while self.gui.running:
             now = pygame.time.get_ticks()
-            elapsed = now - shuffle_start
 
             # --- Events ---
             for event in self.gui.get_events():
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
                     if not locked:
-                        locked = True
-                        waiting_confirm = True
-                    elif waiting_confirm:
-                        return final_value
+                        locked = True          # First Enter = throw
+                    else:
+                        return final_value     # Second Enter = confirm
 
-            # --- Shuffle animation ---
+            # --- Keep shuffling until thrown ---
             if not locked:
-                interval = 80 if elapsed < 600 else 120
+                interval = 80
                 if now - last_shuffle >= interval:
                     shuffle_value = random.randint(1, 6)
                     last_shuffle = now
-                if elapsed >= 900:
-                    locked = True
-                    waiting_confirm = True
 
             # --- Draw ---
             face = final_value if locked else shuffle_value
             dot_color = COLOR_TEXT if locked else COLOR_HIGHLIGHT
-            prompt = "[Enter] Continue" if locked else "[Enter] Roll!"
+            prompt = "[Enter] Continue" if locked else "[Enter] Throw!"
             self._draw(face, dot_color, title, prompt, hero)
 
         return final_value
 
     def _draw(self, face: int, dot_color: tuple, title: str, prompt: str, hero) -> None:
+        # Draw the existing game state first (stats panel if hero provided)
         self.gui.clear_screen()
-
         if hero:
             self.gui.draw_stats_panel(hero=hero)
 
-        self.gui.draw_viewport_panel(title)
+        # Full-screen dark overlay
+        overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, 200))
+        self.gui.screen.blit(overlay, (0, 0))
 
-        # Die box — centred in the viewport panel
-        cx = PANEL_VIEW_X + PANEL_VIEW_W // 2
-        cy = PANEL_VIEW_Y + PANEL_VIEW_H // 2
+        # Die box — centred on the full screen
+        cx = SCREEN_WIDTH // 2
+        cy = SCREEN_HEIGHT // 2 - 30   # Slightly above centre for the label below
 
         box_x = cx - _DIE_SIZE // 2
         box_y = cy - _DIE_SIZE // 2
 
-        # Background
-        pygame.draw.rect(self.gui.screen, (15, 15, 25), (box_x, box_y, _DIE_SIZE, _DIE_SIZE), border_radius=20)
-        # Border
-        pygame.draw.rect(self.gui.screen, COLOR_BORDER, (box_x, box_y, _DIE_SIZE, _DIE_SIZE), 2, border_radius=20)
+        # Title above the die
+        self.gui.draw_text(title, cx, box_y - 50, COLOR_HIGHLIGHT, font=self.gui.title_font, center=True)
+
+        # Die background and border
+        pygame.draw.rect(self.gui.screen, (15, 15, 25), (box_x, box_y, _DIE_SIZE, _DIE_SIZE), border_radius=22)
+        pygame.draw.rect(self.gui.screen, COLOR_BORDER, (box_x, box_y, _DIE_SIZE, _DIE_SIZE), 2, border_radius=22)
 
         # Dots
         self._draw_dots(face, box_x, box_y, dot_color)
 
-        # Roll value label below the die
+        # Value label below the die
         label = str(face) if face else "?"
-        self.gui.draw_text(label, cx, box_y + _DIE_SIZE + 20, COLOR_HIGHLIGHT, font=self.gui.title_font, center=True)
+        self.gui.draw_text(label, cx, box_y + _DIE_SIZE + 18, COLOR_HIGHLIGHT, font=self.gui.title_font, center=True)
 
-        # Prompt at the bottom of the viewport panel
-        prompt_y = PANEL_VIEW_Y + PANEL_VIEW_H - 30
-        self.gui.draw_text(prompt, cx, prompt_y, COLOR_TEXT, center=True)
+        # Prompt below the label
+        self.gui.draw_text(prompt, cx, box_y + _DIE_SIZE + 55, COLOR_TEXT, center=True)
 
         self.gui.update_display()
 
     def _draw_dots(self, face: int, box_x: int, box_y: int, color: tuple) -> None:
         dots = _DOT_GRIDS.get(face, [])
 
-        # Three possible X positions (left, centre, right)
         xs = [
             box_x + _DOT_PADDING,
             box_x + _DIE_SIZE // 2,
             box_x + _DIE_SIZE - _DOT_PADDING,
         ]
-        # Three possible Y positions (top, centre, bottom)
         ys = [
             box_y + _DOT_PADDING,
             box_y + _DIE_SIZE // 2,
