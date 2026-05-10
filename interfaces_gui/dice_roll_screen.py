@@ -16,10 +16,13 @@ _DOT_GRIDS = {
     6: [(0, 0), (2, 0), (0, 1), (2, 1), (0, 2), (2, 2)],
 }
 
-_POPUP_SIZE  = 380          # Square popup side length
+_POPUP_SIZE  = 380
 _DIE_SIZE    = 160
 _DOT_RADIUS  = 12
 _DOT_PADDING = 36
+
+_BLACK       = (0, 0, 0)
+_WHITE       = (255, 255, 255)
 
 
 class DiceRollScreen:
@@ -29,20 +32,20 @@ class DiceRollScreen:
 
     def show(self, title: str = "ROLL THE DICE") -> int:
         """
-        Draw a popup panel over the current screen (background stays visible).
-        - First Enter  → throws the die (animation settles on result)
-        - Second Enter → closes the popup and returns the value
+        Popup panel over the current screen.
+        - Before throw : prompt only, die hidden
+        - First Enter  : die appears and settles (white face, black dots)
+        - Settled      : die turns gold with black dots
+        - Second Enter : closes and returns the value (1–6)
         """
-        final_value  = Die.roll(1, 6)
+        final_value   = Die.roll(1, 6)
         shuffle_value = random.randint(1, 6)
-        locked       = False
-        last_shuffle = pygame.time.get_ticks()
-        settle_start = None
+        locked        = False
+        settle_start  = None
+        last_shuffle  = pygame.time.get_ticks()
 
-        # Snapshot the screen as it is right now so we can redraw it each frame
         background = self.gui.screen.copy()
 
-        # Popup geometry — centred on screen
         px = (SCREEN_WIDTH  - _POPUP_SIZE) // 2
         py = (SCREEN_HEIGHT - _POPUP_SIZE) // 2
 
@@ -53,63 +56,64 @@ class DiceRollScreen:
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
                     if not locked:
                         locked       = True
-                        settle_start = now          # Begin settle animation
+                        settle_start = now
                     else:
-                        return final_value          # Confirm result
+                        return final_value
 
-            # Shuffle before throw
-            if not locked:
-                if now - last_shuffle >= 80:
-                    shuffle_value = random.randint(1, 6)
-                    last_shuffle  = now
-
-            # Short settle animation: rapid → slow → stop
-            if locked and settle_start:
+            # Settle animation: rapid → slow → stop
+            if locked and settle_start is not None:
                 elapsed = now - settle_start
-                if elapsed < 400:
-                    interval = 60
-                elif elapsed < 700:
-                    interval = 130
-                elif elapsed < 900:
-                    interval = 250
+                if   elapsed < 400: interval = 60
+                elif elapsed < 700: interval = 130
+                elif elapsed < 900: interval = 250
                 else:
-                    settle_start = None             # Animation done, lock final face
-                if settle_start and now - last_shuffle >= interval:
+                    settle_start = None     # Fully settled
+                if settle_start is not None and now - last_shuffle >= interval:
                     shuffle_value = random.randint(1, 6)
                     last_shuffle  = now
 
-            face      = final_value if (locked and settle_start is None) else shuffle_value
-            dot_color = COLOR_TEXT  if (locked and settle_start is None) else COLOR_HIGHLIGHT
-            prompt    = "[Enter] Continue" if (locked and settle_start is None) else "[Enter] Throw!"
+            # Determine state
+            settled  = locked and settle_start is None
+            rolling  = locked and settle_start is not None
+            waiting  = not locked
 
-            self._draw(background, px, py, face, dot_color, title, prompt)
+            if waiting:
+                face       = None
+                die_color  = None
+                dot_color  = None
+                prompt     = "[Enter] Throw your dice!"
+            elif rolling:
+                face       = shuffle_value
+                die_color  = _WHITE
+                dot_color  = _BLACK
+                prompt     = ""
+            else:  # settled
+                face       = final_value
+                die_color  = COLOR_HIGHLIGHT
+                dot_color  = _BLACK
+                prompt     = "[Enter] Continue"
+
+            self._draw(background, px, py, face, die_color, dot_color, title, prompt)
 
         return final_value
 
-    def _draw(self, background, px, py, face, dot_color, title, prompt):
-        # Restore the game screen behind the popup
+    def _draw(self, background, px, py, face, die_color, dot_color, title, prompt):
         self.gui.screen.blit(background, (0, 0))
-
-        # Popup panel (uses the same draw_panel style as all other windows)
         self.gui.draw_panel(px, py, _POPUP_SIZE, _POPUP_SIZE, title=title)
 
-        # Die box — centred inside the popup
         cx = px + _POPUP_SIZE // 2
-        cy = py + _POPUP_SIZE // 2 - 20
+        cy = py + _POPUP_SIZE // 2 - 10
 
-        bx = cx - _DIE_SIZE // 2
-        by = cy - _DIE_SIZE // 2
+        # Die — only shown after throw
+        if face is not None:
+            bx = cx - _DIE_SIZE // 2
+            by = cy - _DIE_SIZE // 2
+            pygame.draw.rect(self.gui.screen, die_color,  (bx, by, _DIE_SIZE, _DIE_SIZE), border_radius=18)
+            pygame.draw.rect(self.gui.screen, _BLACK,     (bx, by, _DIE_SIZE, _DIE_SIZE), 2, border_radius=18)
+            self._draw_dots(face, bx, by, dot_color)
 
-        pygame.draw.rect(self.gui.screen, (15, 15, 25), (bx, by, _DIE_SIZE, _DIE_SIZE), border_radius=18)
-        pygame.draw.rect(self.gui.screen, (255, 255, 255), (bx, by, _DIE_SIZE, _DIE_SIZE), 2, border_radius=18)
-
-        self._draw_dots(face, bx, by, dot_color)
-
-        # Value label
-        self.gui.draw_text(str(face), cx, by + _DIE_SIZE + 14, COLOR_HIGHLIGHT, font=self.gui.title_font, center=True)
-
-        # Prompt at the bottom of the popup
-        self.gui.draw_text(prompt, cx, py + _POPUP_SIZE - 28, COLOR_TEXT, center=True)
+        if prompt:
+            self.gui.draw_text(prompt, cx, py + _POPUP_SIZE - 28, COLOR_TEXT, center=True)
 
         self.gui.update_display()
 
